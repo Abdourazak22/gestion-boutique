@@ -1,0 +1,110 @@
+### Connexion (a lancer en premier)
+# @name connexion
+POST {{baseUrl}}/api/auth/connexion
+Content-Type: application/json
+
+{
+  "identifiant": "{{identifiant}}",
+  "motDePasse": "{{motDePasse}}"
+}
+
+> {%
+    client.global.set("jeton", response.body.jeton);
+%}
+
+### Creer un produit (role GERANT)
+# @name creerProduit
+POST {{baseUrl}}/api/produits
+Authorization: Bearer {{jeton}}
+Content-Type: application/json
+
+{
+  "nom": "Riz parfume 5kg",
+  "description": "Sac de riz importe",
+  "prixAchat": 4500.00,
+  "prixVente": 5500.00,
+  "unite": "SACHET",
+  "quantiteStock": 30,
+  "seuilAlerte": 5
+}
+
+> {%
+    client.global.set("produitId", response.body.id);
+%}
+
+### Catalogue pagine
+GET {{baseUrl}}/api/produits?page=0&size=20
+Authorization: Bearer {{jeton}}
+
+### Rechercher un produit par le nom
+GET {{baseUrl}}/api/produits?nom=riz
+Authorization: Bearer {{jeton}}
+
+### Detail d'un produit
+GET {{baseUrl}}/api/produits/{{produitId}}
+Authorization: Bearer {{jeton}}
+
+### Produits sous le seuil d'alerte
+GET {{baseUrl}}/api/produits/alertes-stock
+Authorization: Bearer {{jeton}}
+
+### Modifier un produit (role GERANT)
+PUT {{baseUrl}}/api/produits/{{produitId}}
+Authorization: Bearer {{jeton}}
+Content-Type: application/json
+
+{
+  "nom": "Riz parfume 5kg",
+  "description": "Sac de riz importe - nouveau tarif",
+  "prixAchat": 4500.00,
+  "prixVente": 6000.00,
+  "unite": "SACHET",
+  "quantiteStock": 2,
+  "seuilAlerte": 5
+}
+
+### Nom deja utilise -> 409
+POST {{baseUrl}}/api/produits
+Authorization: Bearer {{jeton}}
+Content-Type: application/json
+
+{
+  "nom": "Riz parfume 5kg",
+  "prixAchat": 4500.00,
+  "prixVente": 5500.00,
+  "unite": "SACHET",
+  "quantiteStock": 10,
+  "seuilAlerte": 2
+}
+
+### Prix de vente < prix d'achat -> 409
+POST {{baseUrl}}/api/produits
+Authorization: Bearer {{jeton}}
+Content-Type: application/json
+
+{
+  "nom": "Huile 1L",
+  "prixAchat": 1000.00,
+  "prixVente": 800.00,
+  "unite": "LITRE",
+  "quantiteStock": 10,
+  "seuilAlerte": 2
+}
+
+### Champs manquants -> 400 avec detail par champ
+POST {{baseUrl}}/api/produits
+Authorization: Bearer {{jeton}}
+Content-Type: application/json
+
+{
+  "nom": "",
+  "prixVente": 500.00
+}
+
+### Produit inexistant -> 404
+GET {{baseUrl}}/api/produits/999999
+Authorization: Bearer {{jeton}}
+
+### Suppression logique (role GERANT)
+DELETE {{baseUrl}}/api/produits/{{produitId}}
+Authorization: Bearer {{jeton}}

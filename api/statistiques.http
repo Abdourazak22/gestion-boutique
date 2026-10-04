@@ -1,0 +1,44 @@
+### Connexion gerant (a lancer en premier)
+# @name connexion
+POST {{baseUrl}}/api/auth/connexion
+Content-Type: application/json
+
+{
+  "identifiant": "{{identifiant}}",
+  "motDePasse": "{{motDePasse}}"
+}
+
+> {% client.global.set("jeton", response.body.jeton); %}
+
+### Tableau de bord, mois en cours par defaut
+GET {{baseUrl}}/api/statistiques
+Authorization: Bearer {{jeton}}
+
+### Aujourd'hui
+GET {{baseUrl}}/api/statistiques?du=2026-10-03&au=2026-10-03
+Authorization: Bearer {{jeton}}
+
+### Les sept derniers jours
+GET {{baseUrl}}/api/statistiques?du=2026-09-27&au=2026-10-03
+Authorization: Bearer {{jeton}}
+
+### Borne de debut seule : la fin vaut aujourd'hui
+GET {{baseUrl}}/api/statistiques?du=2026-01-01
+Authorization: Bearer {{jeton}}
+
+### Periode sans aucune vente : des zeros, jamais des nuls
+GET {{baseUrl}}/api/statistiques?du=2000-01-01&au=2000-01-31
+Authorization: Bearer {{jeton}}
+
+### Plage inversee -> 409
+GET {{baseUrl}}/api/statistiques?du=2026-12-31&au=2026-01-01
+Authorization: Bearer {{jeton}}
+
+### Date malformee -> 400 avec le champ en cause
+GET {{baseUrl}}/api/statistiques?du=03/10/2026
+Authorization: Bearer {{jeton}}
+
+### Un vendeur ne lit pas les chiffres de pilotage -> 403
+# Creer d'abord un vendeur via utilisateurs.http, puis recuperer son jeton.
+GET {{baseUrl}}/api/statistiques
+Authorization: Bearer {{jetonVendeuse}}

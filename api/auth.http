@@ -1,0 +1,47 @@
+### Connexion : recupere un jeton JWT et le stocke dans {{jeton}}
+# @name connexion
+POST {{baseUrl}}/api/auth/connexion
+Content-Type: application/json
+
+{
+  "identifiant": "{{identifiant}}",
+  "motDePasse": "{{motDePasse}}"
+}
+
+> {%
+    // IntelliJ HTTP Client : memorise le jeton pour les requetes suivantes
+    client.global.set("jeton", response.body.jeton);
+    client.test("200 et jeton present", function () {
+        client.assert(response.status === 200, "statut " + response.status);
+        client.assert(response.body.jeton !== undefined, "pas de jeton");
+    });
+%}
+
+### Profil de l'utilisateur connecte
+GET {{baseUrl}}/api/auth/moi
+Authorization: Bearer {{jeton}}
+
+### Mauvais mot de passe -> 401
+POST {{baseUrl}}/api/auth/connexion
+Content-Type: application/json
+
+{
+  "identifiant": "gerant",
+  "motDePasse": "mauvais"
+}
+
+### Champs vides -> 400 avec detail par champ
+POST {{baseUrl}}/api/auth/connexion
+Content-Type: application/json
+
+{
+  "identifiant": "",
+  "motDePasse": ""
+}
+
+### Route protegee sans jeton -> 401
+GET {{baseUrl}}/api/auth/moi
+
+### Route protegee avec jeton invalide -> 401
+GET {{baseUrl}}/api/auth/moi
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.bidon.bidon
