@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "BoutiquePro — Gestion de boutique",
+    default: "BoutiquePro · Gestion de boutique",
     template: "%s · BoutiquePro",
   },
   description:

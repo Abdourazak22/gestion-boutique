@@ -14,7 +14,7 @@ import { libelleUnite, UNITES, type UniteMesure } from "@/lib/types";
  *
  * Les contraintes reproduites ici viennent une à une de `ProduitRequest` et de
  * `ProduitService` : elles évitent un aller-retour pour une faute évidente,
- * mais le serveur reste seul juge — un 400 renvoie sa carte `champs`, affichée
+ * mais le serveur reste seul juge : un 400 renvoie sa carte `champs`, affichée
  * sous les champs concernés.
  */
 

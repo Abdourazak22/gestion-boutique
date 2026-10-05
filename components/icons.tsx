@@ -28,9 +28,9 @@ import {
  *
  * Deux réglages maison appliqués à chaque icône :
  *
- * - `strokeWidth` à 1,75 — Lucide livre 2 par défaut, toute l'interface a été
+ * - `strokeWidth` à 1,75 : Lucide livre 2 par défaut, toute l'interface a été
  *   dessinée au trait plus fin ;
- * - `aria-hidden` — les icônes sont décoratives, le sens est toujours porté par
+ * - `aria-hidden` : les icônes sont décoratives, le sens est toujours porté par
  *   un libellé voisin ou l'`aria-label` du contrôle. Un appelant qui aurait
  *   besoin d'une icône annoncée peut le surcharger : la propagation de
  *   `{...props}` passe après les réglages.

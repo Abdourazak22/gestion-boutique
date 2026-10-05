@@ -2,7 +2,7 @@ const devise = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 0,
 });
 
-/** Montants en francs CFA — adapter ici pour changer de devise. */
+/** Montants en francs CFA : adapter ici pour changer de devise. */
 export const fcfa = (montant: number): string => `${devise.format(montant)} FCFA`;
 
 export const nombre = (valeur: number): string => devise.format(valeur);

@@ -41,7 +41,7 @@ import { dateHeure, fcfa, nombre, pourcent } from "@/lib/format";
  * sur un échantillon de pages comme avant.
  *
  * Un vendeur n'a pas accès à cette route (403) : il reçoit un écran de caisse,
- * avec ce qu'il peut effectivement lire — alertes de stock et dernières ventes.
+ * avec ce qu'il peut effectivement lire : alertes de stock et dernières ventes.
  */
 export function Synthese() {
   const { utilisateur } = useSession();

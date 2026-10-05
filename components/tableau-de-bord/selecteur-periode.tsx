@@ -19,7 +19,7 @@ const PRESETS = [
 /**
  * Unique rangée de filtres du tableau de bord : elle cadre tout ce qui suit,
  * de sorte que les chiffres de toutes les cartes parlent de la même période.
- * Les préréglages passent avant la plage libre — c'est ce qu'on choisit
+ * Les préréglages passent avant la plage libre, c'est ce qu'on choisit
  * neuf fois sur dix.
  */
 export function SelecteurPeriode({

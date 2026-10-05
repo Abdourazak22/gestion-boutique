@@ -38,7 +38,7 @@ type Etat =
  * Ce garde-fou est une commodité d'affichage, pas une sécurité : le jeton vit
  * dans le navigateur, donc aucune vérification n'est possible côté serveur
  * Next. La véritable frontière est l'API Spring, qui exige le jeton sur
- * chaque `/api/**` — un utilisateur qui forcerait cet écran n'obtiendrait
+ * chaque `/api/**` : un utilisateur qui forcerait cet écran n'obtiendrait
  * aucune donnée.
  */
 export function FournisseurSession({ children }: { children: React.ReactNode }) {

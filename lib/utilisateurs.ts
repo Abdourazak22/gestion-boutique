@@ -23,7 +23,7 @@ export type UtilisateurModification = Omit<
   "identifiant" | "motDePasse"
 >;
 
-/** `GET /api/utilisateurs` — réservé au gérant. */
+/** `GET /api/utilisateurs` : réservé au gérant. */
 export async function listerUtilisateurs(
   { page = 0, size = 20 } = {},
   signal?: AbortSignal,
@@ -59,7 +59,7 @@ export async function modifierUtilisateur(
 }
 
 /**
- * `POST /api/utilisateurs/{id}/deconnexion` — révoque les jetons d'un compte.
+ * `POST /api/utilisateurs/{id}/deconnexion` : révoque les jetons d'un compte.
  *
  * Utile quand un appareil est perdu ou un départ non prévu : le compte reste
  * actif, mais toutes ses sessions tombent immédiatement. Désactiver le compte
@@ -71,7 +71,7 @@ export async function deconnecterUtilisateur(id: number): Promise<Utilisateur> {
 }
 
 /**
- * `PATCH /api/utilisateurs/{id}/statut` — active ou désactive un compte.
+ * `PATCH /api/utilisateurs/{id}/statut` : active ou désactive un compte.
  * Il n'y a pas de suppression : les achats et livraisons référencent leur auteur.
  * Le serveur refuse de désactiver le dernier gérant actif (409), et révoque les
  * jetons du compte qu'il désactive.

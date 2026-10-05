@@ -21,7 +21,7 @@ const baseURL = SUR_LE_SERVEUR
 if (!baseURL) {
   // Mieux vaut échouer au démarrage qu'émettre des requêtes vers `undefined/...`.
   throw new Error(
-    "Configuration manquante : renseignez NEXT_PUBLIC_API_URL (et API_URL) dans .env — voir .env.example.",
+    "Configuration manquante : renseignez NEXT_PUBLIC_API_URL (et API_URL) dans .env (voir .env.example).",
   );
 }
 
@@ -83,7 +83,7 @@ export const jeton = {
  *
  * Le filtre de jeton de Spring Security s'exécute avant les règles
  * d'autorisation : un jeton invalide ou révoqué encore en mémoire fait rejeter
- * la requête en 401 — corps vide — avant tout examen des identifiants. Comme
+ * la requête en 401, corps vide, avant tout examen des identifiants. Comme
  * un 401 sur la connexion ne purge volontairement pas le stockage (un mauvais
  * mot de passe ne doit pas déconnecter), le jeton périmé rendait la connexion
  * définitivement impossible.
@@ -126,7 +126,7 @@ api.interceptors.response.use(
   (reponse) => reponse,
   (erreur: AxiosError) => {
     // Jeton plus valable : on le purge et on renvoie vers la connexion. Ce
-    // n'est plus seulement l'expiration — le serveur révoque aussi sur
+    // n'est plus seulement l'expiration : le serveur révoque aussi sur
     // changement de mot de passe, désactivation du compte et déconnexion
     // globale, d'où un message qui couvre les deux cas.
     if (
@@ -185,7 +185,7 @@ export function messageErreur(erreur: unknown): string {
     if (corps?.message) return corps.message;
     if (erreur.code === "ECONNABORTED") return "Le serveur met trop de temps à répondre.";
     if (!erreur.response) return "Impossible de joindre le serveur.";
-    return `Erreur ${erreur.response.status} — la requête a échoué.`;
+    return `Erreur ${erreur.response.status} : la requête a échoué.`;
   }
   return "Une erreur inattendue est survenue.";
 }

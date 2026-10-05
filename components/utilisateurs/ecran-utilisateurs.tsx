@@ -252,8 +252,8 @@ export function EcranUtilisateurs() {
         >
           paramètres
         </a>
-. Un compte ne se supprime pas — les ventes et livraisons enregistrées
-        référencent leur auteur — il se désactive. « Déconnecter » révoque ses
+. Un compte ne se supprime pas (les ventes et livraisons enregistrées
+        référencent leur auteur), il se désactive. « Déconnecter » révoque ses
         sessions en cours sans lui interdire de revenir ; « Désactiver » fait les
         deux.
       </p>

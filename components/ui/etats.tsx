@@ -69,7 +69,7 @@ export function Vide({
  * Page de pagination vide alors que la collection, elle, ne l'est pas.
  *
  * Le cas se produit dès que la liste raccourcit sous les pieds de
- * l'utilisateur — suppression, filtre, création ailleurs : le serveur répond
+ * l'utilisateur (suppression, filtre, création ailleurs) : le serveur répond
  * `content: []` avec un `number` supérieur au dernier index valide. Sans ce
  * message, l'écran affirmait « la liste est vide » et, la pagination étant
  * masquée faute de pages, ne laissait aucun moyen de revenir.

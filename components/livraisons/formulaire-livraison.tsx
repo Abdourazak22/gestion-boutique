@@ -18,7 +18,7 @@ import { fcfa, nombre } from "@/lib/format";
  *
  * Même forme que la caisse, avec deux différences tenues de l'API : le stock
  * entre au lieu de sortir, donc aucun plafond de quantité, et le prix unitaire
- * est saisissable — laissé vide, le serveur reprend le prix d'achat courant du
+ * est saisissable : laissé vide, le serveur reprend le prix d'achat courant du
  * produit (`LivraisonService`). Un produit ne peut figurer qu'une fois.
  */
 interface LigneLivraison {

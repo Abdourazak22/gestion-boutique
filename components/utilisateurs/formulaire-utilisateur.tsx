@@ -99,7 +99,7 @@ export function FormulaireUtilisateur({
       titre={modification ? "Modifier le compte" : "Ajouter un utilisateur"}
       description={
         modification
-          ? `Identifiant « ${utilisateur.identifiant} » — non modifiable.`
+          ? `Identifiant « ${utilisateur.identifiant} », non modifiable.`
           : "Les champs marqués d’une étoile sont obligatoires."
       }
       onFermer={onFermer}

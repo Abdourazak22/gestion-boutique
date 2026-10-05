@@ -78,8 +78,8 @@ export function Topbar() {
           href="/dashboard/produits"
           aria-label={
             alertes > 0
-              ? `Notifications — ${nombre(alertes)} produit${alertes > 1 ? "s" : ""} sous le seuil de stock`
-              : "Notifications — aucune alerte de stock"
+              ? `Notifications : ${nombre(alertes)} produit${alertes > 1 ? "s" : ""} sous le seuil de stock`
+              : "Notifications : aucune alerte de stock"
           }
           className="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-ink-2 transition-colors duration-200 hover:bg-plane hover:text-ink"
         >

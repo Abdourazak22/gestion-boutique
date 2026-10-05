@@ -8,7 +8,7 @@ const BASE =
  *
  * `erreur` vient du serveur (la carte `champs` d'un 400) ou d'un contrôle
  * local : dans les deux cas elle est rendue sous le champ, reliée par
- * `aria-describedby` et signalée par `aria-invalid` — la couleur rouge ne
+ * `aria-describedby` et signalée par `aria-invalid` : la couleur rouge ne
  * suffit pas à porter l'information.
  */
 export function Champ({

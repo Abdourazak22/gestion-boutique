@@ -15,7 +15,7 @@ export interface LivraisonRequete {
   lignes: LigneLivraisonRequete[];
 }
 
-/** `GET /api/livraisons` — historique paginé des réceptions grossistes. */
+/** `GET /api/livraisons` : historique paginé des réceptions grossistes. */
 export async function listerLivraisons(
   { du, au, page = 0, size = 20 }: OptionsHistorique = {},
   signal?: AbortSignal,
@@ -35,7 +35,7 @@ export async function livraisonParId(
   return data;
 }
 
-/** `POST /api/livraisons` — entrée en stock, réservée au rôle GERANT. */
+/** `POST /api/livraisons` : entrée en stock, réservée au rôle GERANT. */
 export async function enregistrerLivraison(
   requete: LivraisonRequete,
 ): Promise<Livraison> {

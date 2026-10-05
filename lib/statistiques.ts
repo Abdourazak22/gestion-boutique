@@ -15,7 +15,7 @@ export interface Periode {
   au: string;
 }
 
-/** `GET /api/statistiques` — réservé au gérant. */
+/** `GET /api/statistiques` : réservé au gérant. */
 export async function chargerStatistiques(
   { du, au }: Periode,
   signal?: AbortSignal,
@@ -107,7 +107,7 @@ const SEUIL_REGROUPEMENT_MENSUEL = 62;
 
 /**
  * Transforme les journées vendues en barres couvrant toute la période, creux
- * compris — sans quoi une semaine sans vente disparaîtrait de l'axe au lieu de
+ * compris, sans quoi une semaine sans vente disparaîtrait de l'axe au lieu de
  * s'y montrer à zéro.
  */
 export function barresDeVentes(

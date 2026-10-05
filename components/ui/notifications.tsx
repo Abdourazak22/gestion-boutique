@@ -9,7 +9,7 @@ import { notifier } from "@/lib/notifier";
  * Hôte des notifications, monté une seule fois dans le layout racine : les
  * toasts survivent ainsi aux navigations entre pages.
  *
- * Il affiche aussi, au montage, le message laissé par la page précédente —
+ * Il affiche aussi, au montage, le message laissé par la page précédente,
  * typiquement « session plus valide », émis juste avant un rechargement complet.
  */
 export function Notifications() {

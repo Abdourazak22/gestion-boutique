@@ -18,7 +18,7 @@ const PAR_PAGE = 20;
  * Historique branché sur `GET /api/achats`.
  *
  * Les bornes de dates sont envoyées au serveur ; la recherche texte, elle,
- * n'existe pas côté API et ne porte donc que sur la page affichée — c'est dit
+ * n'existe pas côté API et ne porte donc que sur la page affichée, c'est dit
  * à l'utilisateur plutôt que laissé deviner.
  */
 export function TableVentes() {
@@ -263,7 +263,7 @@ export function TableVentes() {
   );
 }
 
-/** Ticket de caisse — exigence « imprimer le ticket de caisse ». */
+/** Ticket de caisse : exigence « imprimer le ticket de caisse ». */
 function Ticket({ achat, onFermer }: { achat: Achat; onFermer: () => void }) {
   return (
     <aside className="h-fit rounded-card border border-line bg-surface xl:sticky xl:top-6">

@@ -4,7 +4,7 @@ import { Vide } from "@/components/ui/etats";
 
 /**
  * Classement des produits par chiffre d'affaires. Barres horizontales triées,
- * teinte unique : le rang se lit à la longueur, pas à la couleur — une rampe
+ * teinte unique : le rang se lit à la longueur, pas à la couleur : une rampe
  * de valeur sur des catégories nominales ne ferait que redire la longueur.
  */
 export function TopProduits({ produits }: { produits: ProduitVendu[] }) {

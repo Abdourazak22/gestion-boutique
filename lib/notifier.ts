@@ -8,7 +8,7 @@ import { differerMessage, type TonMessage } from "./messages-differes";
  * Point d'entrée unique des notifications éphémères.
  *
  * Un toast sert à accuser réception d'une action : il apparaît, il part. Il ne
- * remplace pas l'état d'un écran — un chargement qui échoue reste affiché en
+ * remplace pas l'état d'un écran : un chargement qui échoue reste affiché en
  * place, avec son bouton « Réessayer » (voir `components/ui/etats.tsx`), sinon
  * l'utilisateur se retrouve devant une page vide dont le message a disparu.
  */

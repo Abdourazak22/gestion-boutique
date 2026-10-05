@@ -15,7 +15,7 @@ export interface Identifiants {
   memoriser: boolean;
 }
 
-/** `POST /api/auth/connexion` — émet le jeton et le met en place. */
+/** `POST /api/auth/connexion` : émet le jeton et le met en place. */
 export async function seConnecter({
   identifiant,
   motDePasse,
@@ -34,7 +34,7 @@ export async function seConnecter({
 }
 
 /**
- * `GET /api/auth/moi` — profil du porteur du jeton. Sert aussi de contrôle de
+ * `GET /api/auth/moi` : profil du porteur du jeton. Sert aussi de contrôle de
  * validité au chargement : un jeton expiré ou révoqué renvoie 401,
  * l'intercepteur d'`api.ts` purge alors la session.
  */
@@ -44,7 +44,7 @@ export async function profil(): Promise<Utilisateur> {
 }
 
 /**
- * `PATCH /api/auth/mot-de-passe` — changement de son propre mot de passe.
+ * `PATCH /api/auth/mot-de-passe` : changement de son propre mot de passe.
  *
  * Le serveur révoque au passage TOUS les jetons du compte, celui en cours
  * compris : l'appelant doit donc considérer sa session comme terminée et
@@ -76,7 +76,7 @@ export async function seDeconnecter(): Promise<boolean> {
     await api.post("/auth/deconnexion");
     return true;
   } catch (erreur) {
-    // 401 : le jeton était déjà révoqué — c'est l'état voulu, pas un échec.
+    // 401 : le jeton était déjà révoqué, c'est l'état voulu, pas un échec.
     return statutHttp(erreur) === 401;
   } finally {
     jeton.effacer();

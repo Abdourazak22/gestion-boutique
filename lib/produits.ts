@@ -19,7 +19,7 @@ export interface OptionsCatalogue {
   size?: number;
 }
 
-/** `GET /api/produits` — catalogue paginé des produits actifs. */
+/** `GET /api/produits` : catalogue paginé des produits actifs. */
 export async function listerProduits(
   { nom, page = 0, size = 20 }: OptionsCatalogue = {},
   signal?: AbortSignal,
@@ -32,7 +32,7 @@ export async function listerProduits(
   return data;
 }
 
-/** `GET /api/produits/alertes-stock` — produits retombés au seuil d'alerte. */
+/** `GET /api/produits/alertes-stock` : produits retombés au seuil d'alerte. */
 export async function listerAlertesStock(
   { page = 0, size = 20 } = {},
   signal?: AbortSignal,
@@ -49,13 +49,13 @@ export async function produitParId(id: number, signal?: AbortSignal): Promise<Pr
   return data;
 }
 
-/** `POST /api/produits` — réservé au rôle GERANT. */
+/** `POST /api/produits` : réservé au rôle GERANT. */
 export async function creerProduit(requete: ProduitRequete): Promise<Produit> {
   const { data } = await api.post<Produit>("/produits", requete);
   return data;
 }
 
-/** `PUT /api/produits/{id}` — réservé au rôle GERANT. */
+/** `PUT /api/produits/{id}` : réservé au rôle GERANT. */
 export async function modifierProduit(
   id: number,
   requete: ProduitRequete,
@@ -64,7 +64,7 @@ export async function modifierProduit(
   return data;
 }
 
-/** `DELETE /api/produits/{id}` — suppression logique, réservée au GERANT. */
+/** `DELETE /api/produits/{id}` : suppression logique, réservée au GERANT. */
 export async function supprimerProduit(id: number): Promise<void> {
   await api.delete(`/produits/${id}`);
 }

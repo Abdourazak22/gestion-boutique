@@ -14,7 +14,7 @@ const PAR_PAGE = 12;
 /**
  * Catalogue branché sur `GET /api/produits`.
  *
- * La recherche par nom est déléguée au serveur — c'est lui qui détient le
+ * La recherche par nom est déléguée au serveur : c'est lui qui détient le
  * catalogue entier ; filtrer la page courante côté navigateur ne trouverait
  * que les produits déjà chargés.
  */

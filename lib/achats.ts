@@ -21,7 +21,7 @@ export interface OptionsHistorique {
   size?: number;
 }
 
-/** `GET /api/achats` — historique paginé, trié du plus récent au plus ancien. */
+/** `GET /api/achats` : historique paginé, trié du plus récent au plus ancien. */
 export async function listerAchats(
   { du, au, page = 0, size = 20 }: OptionsHistorique = {},
   signal?: AbortSignal,
@@ -39,7 +39,7 @@ export async function achatParId(id: number, signal?: AbortSignal): Promise<Acha
 }
 
 /**
- * `GET /api/achats/{id}/ticket` — ticket de caisse en PDF, gabarit 58 mm.
+ * `GET /api/achats/{id}/ticket` : ticket de caisse en PDF, gabarit 58 mm.
  *
  * L'endpoint exige le jeton d'authentification : impossible d'y pointer un
  * simple lien, qui ne porterait aucun en-tête. On récupère donc le PDF en
@@ -61,7 +61,7 @@ export async function ouvrirTicket(id: number): Promise<Window | null> {
 }
 
 /**
- * `POST /api/achats` — enregistre une vente et décrémente le stock.
+ * `POST /api/achats` : enregistre une vente et décrémente le stock.
  * Le vendeur est déduit du jeton, jamais envoyé par le client.
  */
 export async function enregistrerAchat(requete: AchatRequete): Promise<Achat> {

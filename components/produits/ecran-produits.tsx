@@ -12,7 +12,7 @@ import { Squelette } from "@/components/ui/etats";
 /**
  * Écran Produits : le catalogue et, pour le gérant, la création d'un produit.
  *
- * Le bouton n'apparaît pas pour un vendeur — `POST /api/produits` est annoté
+ * Le bouton n'apparaît pas pour un vendeur : `POST /api/produits` est annoté
  * `@PreAuthorize("hasRole('GERANT')")`, lui proposer l'action ne mènerait qu'à
  * un 403. C'est un confort d'interface : l'autorisation reste celle du serveur.
  */

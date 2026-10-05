@@ -18,7 +18,7 @@ export default function PageConnexion() {
         style={{
           backgroundImage: [
             // Halo chaud de l'horizon, placé bas pour laisser le formulaire
-            // sur la moitié sombre — c'est ce qui porte le contraste.
+            // sur la moitié sombre, c'est ce qui porte le contraste.
             "radial-gradient(115% 40% at 50% 92%, rgba(248,231,183,0.82) 0%, rgba(248,231,183,0.14) 46%, rgba(248,231,183,0) 64%)",
             "radial-gradient(60% 28% at 74% 94%, rgba(231,166,96,0.48) 0%, rgba(231,166,96,0) 60%)",
             "radial-gradient(85% 55% at 20% 12%, rgba(90,196,133,0.20) 0%, rgba(90,196,133,0) 68%)",

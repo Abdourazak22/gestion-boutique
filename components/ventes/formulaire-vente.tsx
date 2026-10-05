@@ -27,7 +27,7 @@ const PAR_PAGE = 8;
  * Caisse : composer un panier puis `POST /api/achats`.
  *
  * Trois règles de `AchatService` sont reprises ici pour éviter un 409 prévisible
- * — un même produit ne peut figurer deux fois (l'ajouter à nouveau incrémente
+ * : un même produit ne peut figurer deux fois (l'ajouter à nouveau incrémente
  * sa quantité), la quantité est au minimum de 1, et elle ne peut dépasser le
  * stock connu. Le serveur reste l'autorité : il décrémente sous transaction et
  * annule la vente entière si un stock manque.
@@ -91,7 +91,7 @@ export function FormulaireVente() {
    * Sans cela, après un refus les lignes gardent le stock lu au moment de
    * l'ajout : le plafond de quantité et le « / N en stock » affichés seraient
    * faux, et l'utilisateur rejouerait la même vente vouée au même échec. Une
-   * ligne dont le produit a disparu du catalogue est retirée — la garder
+   * ligne dont le produit a disparu du catalogue est retirée, la garder
    * n'offrirait qu'un 404 de plus.
    */
   async function resynchroniserLePanier() {
@@ -353,7 +353,7 @@ function Panier({
         <Champ
           id="nomClient"
           libelle="Nom du client"
-          indice="Facultatif — une vente sans nom reste valide."
+          indice="Facultatif : une vente sans nom reste valide."
         >
           <Saisie
             {...liaisonsChamp("nomClient", undefined, true)}
