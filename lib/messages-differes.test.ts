@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { consommerMessageDiffere, differerMessage } from "./messages-differes";
 
-const CLE = "boutiquepro.message";
+const CLE = "boutiquex.message";
 
 beforeEach(() => {
   window.sessionStorage.clear();

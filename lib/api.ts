@@ -25,7 +25,7 @@ if (!baseURL) {
   );
 }
 
-const CLE_JETON = "boutiquepro.token";
+const CLE_JETON = "boutiquex.token";
 
 export const api: AxiosInstance = axios.create({
   baseURL,

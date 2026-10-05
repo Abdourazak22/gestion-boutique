@@ -103,21 +103,21 @@ describe("401 attendu, qui ne doit pas déconnecter", () => {
 describe("stockage du jeton", () => {
   it("retient durablement quand « se souvenir de moi » est coché", () => {
     jeton.ecrire("abc", true);
-    expect(window.localStorage.getItem("boutiquepro.token")).toBe("abc");
-    expect(window.sessionStorage.getItem("boutiquepro.token")).toBeNull();
+    expect(window.localStorage.getItem("boutiquex.token")).toBe("abc");
+    expect(window.sessionStorage.getItem("boutiquex.token")).toBeNull();
   });
 
   it("limite à l'onglet quand la case est décochée", () => {
     jeton.ecrire("abc", false);
-    expect(window.sessionStorage.getItem("boutiquepro.token")).toBe("abc");
-    expect(window.localStorage.getItem("boutiquepro.token")).toBeNull();
+    expect(window.sessionStorage.getItem("boutiquex.token")).toBe("abc");
+    expect(window.localStorage.getItem("boutiquex.token")).toBeNull();
   });
 
   it("ne laisse pas un ancien jeton dans l'autre stockage", () => {
     jeton.ecrire("ancien", true);
     jeton.ecrire("nouveau", false);
     expect(jeton.lire()).toBe("nouveau");
-    expect(window.localStorage.getItem("boutiquepro.token")).toBeNull();
+    expect(window.localStorage.getItem("boutiquex.token")).toBeNull();
   });
 
   it("efface les deux stockages", () => {

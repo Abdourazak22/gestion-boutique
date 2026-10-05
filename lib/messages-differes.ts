@@ -9,7 +9,7 @@
  * `api.ts`, qui doit rester utilisable côté serveur.
  */
 
-const CLE = "boutiquepro.message";
+const CLE = "boutiquex.message";
 
 export type TonMessage = "erreur" | "succes";
 

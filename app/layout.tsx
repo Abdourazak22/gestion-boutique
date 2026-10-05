@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "BoutiquePro · Gestion de boutique",
-    template: "%s · BoutiquePro",
+    default: "BoutiqueX · Gestion de boutique",
+    template: "%s · BoutiqueX",
   },
   description:
     "Logiciel de gestion d'une boutique de produits alimentaires : ventes, livraisons grossistes, stock et utilisateurs.",

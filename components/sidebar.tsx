@@ -36,7 +36,7 @@ export function Sidebar() {
           <IconBoutique className="h-4.5 w-4.5" />
         </span>
         <span className="text-[15px] font-semibold tracking-tight">
-          Boutique<span className="text-brand-300">Pro</span>
+          Boutique<span className="text-brand-300">X</span>
         </span>
       </div>
 

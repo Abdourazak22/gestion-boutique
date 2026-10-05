@@ -57,8 +57,8 @@ describe("connexion", () => {
 
     await seConnecter({ identifiant: "gerant", motDePasse: "gerant123", memoriser: false });
 
-    expect(window.sessionStorage.getItem("boutiquepro.token")).toBe("jeton-de-session");
-    expect(window.localStorage.getItem("boutiquepro.token")).toBeNull();
+    expect(window.sessionStorage.getItem("boutiquex.token")).toBe("jeton-de-session");
+    expect(window.localStorage.getItem("boutiquex.token")).toBeNull();
   });
 });
 

@@ -41,7 +41,7 @@ export default function PageConnexion() {
             <IconBoutique className="h-5.5 w-5.5" />
           </span>
           <h1 className="text-lg font-semibold tracking-tight text-white">
-            Boutique<span className="text-brand-300">Pro</span>
+            Boutique<span className="text-brand-300">X</span>
           </h1>
           <p className="text-center text-[13px] text-white/70 [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
             Connectez-vous pour accéder à la caisse et au stock.
