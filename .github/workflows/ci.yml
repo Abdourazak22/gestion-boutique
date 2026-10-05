@@ -41,6 +41,12 @@ jobs:
       - name: Installer les dépendances
         run: npm ci
 
+      # `LayoutProps`, `PageProps` et `next-env.d.ts` sont générés par Next, pas
+      # versionnés. Sans cette étape, `tsc` ne les trouve pas sur un dépôt frais
+      # et échoue alors qu'il passe en local, où un build précédent les a créés.
+      - name: Générer les types de routes
+        run: npx next typegen
+
       - name: Vérifier les types
         run: npx tsc --noEmit
 
