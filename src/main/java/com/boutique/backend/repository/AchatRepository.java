@@ -47,6 +47,7 @@ public interface AchatRepository extends JpaRepository<Achat, Long> {
                 join a.lignes l
                 join l.produit p
             where a.dateAchat between :debut and :fin
+                and a.statut = com.boutique.backend.model.StatutAchat.PAYE
             """)
     AgregatVentes agregerVentes(@Param("debut") LocalDateTime debut,
                                 @Param("fin") LocalDateTime fin);
@@ -59,6 +60,7 @@ public interface AchatRepository extends JpaRepository<Achat, Long> {
                 coalesce(sum(a.montantTotal), 0))
             from Achat a
             where a.dateAchat between :debut and :fin
+                and a.statut = com.boutique.backend.model.StatutAchat.PAYE
             group by cast(a.dateAchat as LocalDate)
             order by cast(a.dateAchat as LocalDate)
             """)
@@ -77,6 +79,7 @@ public interface AchatRepository extends JpaRepository<Achat, Long> {
                 coalesce(sum(a.montantTotal), 0))
             from Achat a
             where a.dateAchat between :debut and :fin
+                and a.statut = com.boutique.backend.model.StatutAchat.PAYE
                 and a.modePaiement is not null
             group by a.modePaiement
             order by sum(a.montantTotal) desc
@@ -101,6 +104,7 @@ public interface AchatRepository extends JpaRepository<Achat, Long> {
                 join l.achat a
                 join l.produit p
             where a.dateAchat between :debut and :fin
+                and a.statut = com.boutique.backend.model.StatutAchat.PAYE
             group by p.id, p.nom
             order by sum(l.montantLigne) desc
             """)

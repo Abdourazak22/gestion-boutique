@@ -2,6 +2,7 @@ package com.boutique.backend.controller;
 
 import com.boutique.backend.dto.AchatRequest;
 import com.boutique.backend.dto.AchatResponse;
+import com.boutique.backend.dto.AnnulationRequest;
 import com.boutique.backend.dto.TicketPdf;
 import com.boutique.backend.service.AchatService;
 import com.boutique.backend.service.TicketService;
@@ -17,9 +18,11 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -62,6 +65,22 @@ public class AchatController {
     @GetMapping("/{id}")
     public AchatResponse detail(@PathVariable Long id) {
         return achatService.parId(id);
+    }
+
+    /**
+     * Annule une vente et, au choix, lui rend son stock.
+     *
+     * Réservé au gérant : laisser un vendeur annuler ses propres encaissements
+     * ouvre la porte au détournement, puisque la vente disparaîtrait du chiffre
+     * d'affaires sans que l'argent revienne en caisse. En boutique, on appelle
+     * le gérant.
+     */
+    @PatchMapping("/{id}/annulation")
+    @PreAuthorize("hasRole('GERANT')")
+    public AchatResponse annuler(@PathVariable Long id,
+                                 @Valid @RequestBody AnnulationRequest requete,
+                                 @AuthenticationPrincipal Jwt jwt) {
+        return achatService.annuler(id, requete, jwt.getSubject());
     }
 
     /**

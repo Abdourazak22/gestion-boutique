@@ -93,7 +93,18 @@ public class TicketService {
         }
         lignes.add(separateur('='));
         lignes.add("");
-        lignes.add(centrer("Merci de votre visite !"));
+
+        if (achat.estAnnule()) {
+            // En tete de pied plutot qu'en bas de page : un ticket annule ne
+            // doit pas pouvoir passer pour valide d'un coup d'oeil.
+            lignes.add(centrer("*** VENTE ANNULEE ***"));
+            if (achat.getDateAnnulation() != null) {
+                lignes.add(centrer("le " + achat.getDateAnnulation().format(HORODATAGE)));
+            }
+            lignes.add("");
+        } else {
+            lignes.add(centrer("Merci de votre visite !"));
+        }
 
         return lignes;
     }

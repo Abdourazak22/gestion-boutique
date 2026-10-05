@@ -1,6 +1,7 @@
 package com.boutique.backend.service;
 
 import com.boutique.backend.dto.AchatRequest;
+import com.boutique.backend.dto.AnnulationRequest;
 import com.boutique.backend.dto.AchatResponse;
 import com.boutique.backend.dto.LigneAchatRequest;
 import com.boutique.backend.exception.ConflitException;
@@ -8,6 +9,7 @@ import com.boutique.backend.exception.RessourceIntrouvableException;
 import com.boutique.backend.model.Achat;
 import com.boutique.backend.model.LigneAchat;
 import com.boutique.backend.model.Produit;
+import com.boutique.backend.model.StatutAchat;
 import com.boutique.backend.repository.AchatRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -63,6 +65,45 @@ public class AchatService {
         achat.recalculerTotal();
 
         return AchatResponse.de(achatRepository.save(achat));
+    }
+
+    /**
+     * Annule une vente et, si la marchandise revient en rayon, lui rend son stock.
+     *
+     * La vente n'est pas supprimée : son ticket a été remis au client et son
+     * numéro ne doit jamais être réattribué. Elle quitte en revanche le chiffre
+     * d'affaires et la marge, que les requêtes d'agrégation filtrent sur le
+     * statut.
+     *
+     * @param identifiantAuteur l'annulation reste attribuable à quelqu'un
+     * @throws ConflitException si la vente est déjà annulée
+     */
+    @Transactional
+    public AchatResponse annuler(Long id, AnnulationRequest requete,
+                                 String identifiantAuteur) {
+        Achat achat = achatRepository.findWithLignesById(id)
+                .orElseThrow(() -> RessourceIntrouvableException.de("Achat", id));
+
+        if (achat.estAnnule()) {
+            throw new ConflitException(
+                    "La vente " + achat.getNumero() + " est déjà annulée");
+        }
+
+        if (Boolean.TRUE.equals(requete.retourEnStock())) {
+            for (LigneAchat ligne : achat.getLignes()) {
+                // Même point d'entrée que les livraisons : le verrou optimiste
+                // du produit protège des annulations concurrentes.
+                produitService.entrerEnStock(ligne.getProduit().getId(), ligne.getQuantite());
+            }
+        }
+
+        achat.setStatut(StatutAchat.ANNULE);
+        achat.setMotifAnnulation(requete.motif());
+        achat.setCommentaireAnnulation(requete.commentaire());
+        achat.setDateAnnulation(LocalDateTime.now());
+        achat.setAnnulePar(utilisateurService.parIdentifiant(identifiantAuteur));
+
+        return AchatResponse.de(achat);
     }
 
     public AchatResponse parId(Long id) {

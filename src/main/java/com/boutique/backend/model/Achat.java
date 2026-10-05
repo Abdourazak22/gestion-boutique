@@ -66,6 +66,34 @@ public class Achat {
     @Column(name = "mode_paiement", nullable = false, length = 20)
     private ModePaiement modePaiement;
 
+    /**
+     * Une vente annulée reste en base : son ticket a été remis au client et son
+     * numéro ne doit jamais être réattribué. Elle est en revanche exclue du
+     * chiffre d'affaires et de la marge.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private StatutAchat statut = StatutAchat.PAYE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "motif_annulation", length = 30)
+    private MotifAnnulation motifAnnulation;
+
+    @Column(name = "commentaire_annulation", length = 300)
+    private String commentaireAnnulation;
+
+    @Column(name = "date_annulation")
+    private LocalDateTime dateAnnulation;
+
+    /** Qui a annulé : une annulation est un geste qui doit rester attribuable. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "annule_par_id")
+    private Utilisateur annulePar;
+
+    public boolean estAnnule() {
+        return statut == StatutAchat.ANNULE;
+    }
+
     @OneToMany(mappedBy = "achat", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LigneAchat> lignes = new ArrayList<>();
 
