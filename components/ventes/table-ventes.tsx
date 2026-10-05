@@ -8,7 +8,7 @@ import { IconFermer, IconImprimer, IconRecherche } from "@/components/icons";
 import { listerAchats, ouvrirTicket } from "@/lib/achats";
 import { useRequete } from "@/lib/requete";
 import { notifier } from "@/lib/notifier";
-import type { Achat } from "@/lib/types";
+import { libelleModePaiement, type Achat } from "@/lib/types";
 import { dateCourte, dateLongue, fcfa, heure } from "@/lib/format";
 import { messageErreur } from "@/lib/api";
 
@@ -165,6 +165,7 @@ export function TableVentes() {
                     <th scope="col" className="py-2.5 font-medium">Vente</th>
                     <th scope="col" className="py-2.5 font-medium">Client</th>
                     <th scope="col" className="py-2.5 font-medium">Vendeur</th>
+                    <th scope="col" className="py-2.5 font-medium">Paiement</th>
                     <th scope="col" className="py-2.5 font-medium">Articles</th>
                     <th scope="col" className="py-2.5 text-right font-medium">Total</th>
                     <th scope="col" className="py-2.5 pr-4 text-right font-medium">Date</th>
@@ -218,6 +219,9 @@ export function TableVentes() {
                         )}
                       </td>
                       <td className="py-3 text-[13px] text-ink-2">{a.vendeur}</td>
+                      <td className="py-3 text-[13px] text-ink-2">
+                        {libelleModePaiement[a.modePaiement]}
+                      </td>
                       <td className="tnum py-3 text-[13px] text-ink-2">
                         {a.lignes.length}
                       </td>
@@ -231,7 +235,7 @@ export function TableVentes() {
                   ))}
                   {visibles.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-12 text-center">
+                      <td colSpan={8} className="px-4 py-12 text-center">
                         <p className="text-sm font-medium text-ink">
                           Aucune vente ne correspond
                         </p>
@@ -311,6 +315,10 @@ function Ticket({ achat, onFermer }: { achat: Achat; onFermer: () => void }) {
         <dl className="tnum grid grid-cols-2 gap-x-3 gap-y-1 pt-3 text-[11px]">
           <dt className="text-ink-2">Vendeur</dt>
           <dd className="text-right text-ink">{achat.vendeur}</dd>
+          <dt className="text-ink-2">Paiement</dt>
+          <dd className="text-right text-ink">
+            {libelleModePaiement[achat.modePaiement]}
+          </dd>
           {achat.telephoneClient ? (
             <>
               <dt className="text-ink-2">Téléphone</dt>

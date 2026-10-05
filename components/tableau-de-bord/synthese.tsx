@@ -24,6 +24,7 @@ import {
   type Periode,
 } from "@/lib/statistiques";
 import {
+  libelleModePaiement,
   libelleUnite,
   panierMoyen,
   tauxMarge,
@@ -168,6 +169,11 @@ function SyntheseGerant() {
             chargement={alertes.chargement}
           />
           {stats.donnees ? (
+            <Encaissements stats={stats.donnees} />
+          ) : (
+            <Squelette className="h-40" />
+          )}
+          {stats.donnees ? (
             <Livraisons stats={stats.donnees} />
           ) : (
             <Squelette className="h-32" />
@@ -241,6 +247,57 @@ function Kpis({
         } · ${nombre(stats.stock.enAlerte)} sous le seuil`}
       />
     </div>
+  );
+}
+
+/**
+ * Ventilation des encaissements par moyen de règlement.
+ *
+ * C'est le chiffre de la clôture : il dit ce qui doit se trouver dans le
+ * tiroir-caisse et ce qui est arrivé sur chaque portefeuille mobile. Une barre
+ * de proportion plutôt qu'un camembert : quatre valeurs se comparent mieux en
+ * longueur, et le libellé porte l'information, pas la couleur.
+ */
+function Encaissements({ stats }: { stats: Statistiques }) {
+  const total = stats.ventes.chiffreAffaires;
+
+  return (
+    <Card>
+      <CardHeader
+        titre="Encaissements"
+        sousTitre="Par moyen de règlement sur la période"
+      />
+      {stats.ventesParMode.length === 0 ? (
+        <div className="px-5 pb-5">
+          <Vide titre="Aucun encaissement sur la période" />
+        </div>
+      ) : (
+        <ul className="space-y-3 px-5 pb-5">
+          {stats.ventesParMode.map((m) => (
+            <li key={m.mode}>
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-[13px] text-ink">
+                  {libelleModePaiement[m.mode]}
+                </span>
+                <span className="tnum text-[13px] font-semibold text-ink">
+                  {fcfa(m.montant)}
+                </span>
+              </div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-plane">
+                <div
+                  className="h-full rounded-full bg-brand-500"
+                  style={{ width: `${total > 0 ? (m.montant / total) * 100 : 0}%` }}
+                />
+              </div>
+              <p className="tnum mt-1 text-[11px] text-ink-2">
+                {nombre(m.nombre)} vente{m.nombre > 1 ? "s" : ""}
+                {total > 0 ? ` · ${pourcent((m.montant / total) * 100)}` : ""}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }
 

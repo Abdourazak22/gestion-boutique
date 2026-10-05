@@ -157,6 +157,7 @@ describe("encaissement", () => {
       telephoneClient: null,
       dateAchat: "2026-10-05T10:00:00",
       vendeur: "Gerant Ouattara",
+  modePaiement: "ESPECES" as const,
       montantTotal: 6500,
       lignes: [],
     });
@@ -171,6 +172,7 @@ describe("encaissement", () => {
       expect(vi.mocked(enregistrerAchat)).toHaveBeenCalledWith({
         nomClient: "Esther",
         telephoneClient: undefined,
+        modePaiement: "ESPECES",
         lignes: [
           { produitId: 1, quantite: 1 },
           { produitId: 2, quantite: 1 },
@@ -188,6 +190,7 @@ describe("encaissement", () => {
       telephoneClient: null,
       dateAchat: "2026-10-05T10:00:00",
       vendeur: "Gerant Ouattara",
+  modePaiement: "ESPECES" as const,
       montantTotal: 5500,
       lignes: [],
     });
@@ -237,5 +240,76 @@ describe("encaissement", () => {
     await userEvent.click(screen.getByRole("button", { name: /encaisser/i }));
 
     await waitFor(() => expect(screen.getByText(/Aucun article/i)).toBeInTheDocument());
+  });
+});
+
+/**
+ * Le moyen de règlement conditionne la clôture de caisse du soir : il doit être
+ * saisi à chaque vente, et transmis tel quel au serveur qui l'exige.
+ */
+describe("moyen de paiement", () => {
+  it("propose les quatre moyens, espèces par défaut", async () => {
+    render(<FormulaireVente />);
+    await screen.findByRole("button", { name: /^Riz/ });
+
+    const liste = screen.getByLabelText(/moyen de paiement/i);
+    expect(liste).toHaveValue("ESPECES");
+    expect(screen.getByRole("option", { name: "Espèces" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Orange Money" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Moov Money" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Carte" })).toBeInTheDocument();
+  });
+
+  it("transmet le moyen choisi au serveur", async () => {
+    vi.mocked(enregistrerAchat).mockResolvedValue({
+      id: 9,
+      numero: "ACH-20261005-0009",
+      nomClient: null,
+      telephoneClient: null,
+      dateAchat: "2026-10-05T10:00:00",
+      vendeur: "Gerant Ouattara",
+      modePaiement: "ORANGE_MONEY",
+      montantTotal: 5500,
+      lignes: [],
+    });
+
+    render(<FormulaireVente />);
+    await ajouter("Riz");
+    await userEvent.selectOptions(
+      screen.getByLabelText(/moyen de paiement/i),
+      "ORANGE_MONEY",
+    );
+    await userEvent.click(screen.getByRole("button", { name: /encaisser/i }));
+
+    await waitFor(() =>
+      expect(vi.mocked(enregistrerAchat)).toHaveBeenCalledWith(
+        expect.objectContaining({ modePaiement: "ORANGE_MONEY" }),
+      ),
+    );
+  });
+
+  it("envoie toujours un moyen, même sans intervention du vendeur", async () => {
+    vi.mocked(enregistrerAchat).mockResolvedValue({
+      id: 10,
+      numero: "ACH-20261005-0010",
+      nomClient: null,
+      telephoneClient: null,
+      dateAchat: "2026-10-05T10:00:00",
+      vendeur: "Gerant Ouattara",
+      modePaiement: "ESPECES",
+      montantTotal: 5500,
+      lignes: [],
+    });
+
+    render(<FormulaireVente />);
+    await ajouter("Riz");
+    await userEvent.click(screen.getByRole("button", { name: /encaisser/i }));
+
+    // Le serveur refuse une vente sans moyen : le défaut évite un 400 inutile.
+    await waitFor(() =>
+      expect(vi.mocked(enregistrerAchat)).toHaveBeenCalledWith(
+        expect.objectContaining({ modePaiement: "ESPECES" }),
+      ),
+    );
   });
 });

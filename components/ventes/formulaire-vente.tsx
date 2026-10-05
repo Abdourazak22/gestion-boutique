@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader } from "@/components/ui/card";
-import { Champ, liaisonsChamp, Saisie } from "@/components/ui/champ";
+import { Champ, liaisonsChamp, Liste, Saisie } from "@/components/ui/champ";
 import { Erreur, Squelette, Vide } from "@/components/ui/etats";
 import { Badge } from "@/components/ui/badge";
 import { IconAlerte, IconFermer, IconPlus, IconRecherche } from "@/components/icons";
@@ -11,7 +11,13 @@ import { enregistrerAchat, type AchatRequete } from "@/lib/achats";
 import { listerProduits, produitParId } from "@/lib/produits";
 import { useRequete } from "@/lib/requete";
 import { notifier } from "@/lib/notifier";
-import { libelleUnite, type Produit } from "@/lib/types";
+import {
+  libelleModePaiement,
+  libelleUnite,
+  MODES_PAIEMENT,
+  type ModePaiement,
+  type Produit,
+} from "@/lib/types";
 import { statutHttp } from "@/lib/api";
 import { fcfa, nombre } from "@/lib/format";
 
@@ -39,6 +45,8 @@ export function FormulaireVente() {
   const [lignes, setLignes] = useState<LigneVente[]>([]);
   const [nomClient, setNomClient] = useState("");
   const [telephoneClient, setTelephoneClient] = useState("");
+  // Espèces par défaut : c'est le règlement majoritaire au comptoir.
+  const [modePaiement, setModePaiement] = useState<ModePaiement>("ESPECES");
   const [enCours, setEnCours] = useState(false);
 
   useEffect(() => {
@@ -125,6 +133,7 @@ export function FormulaireVente() {
     const requete: AchatRequete = {
       nomClient: nomClient.trim() || undefined,
       telephoneClient: telephoneClient.trim() || undefined,
+      modePaiement,
       lignes: lignes.map((l) => ({
         produitId: l.produit.id,
         quantite: l.quantite,
@@ -244,9 +253,11 @@ export function FormulaireVente() {
         total={total}
         nomClient={nomClient}
         telephoneClient={telephoneClient}
+        modePaiement={modePaiement}
         enCours={enCours}
         onNomClient={setNomClient}
         onTelephoneClient={setTelephoneClient}
+        onModePaiement={setModePaiement}
         onQuantite={changerQuantite}
         onRetirer={retirer}
         onEncaisser={encaisser}
@@ -260,9 +271,11 @@ function Panier({
   total,
   nomClient,
   telephoneClient,
+  modePaiement,
   enCours,
   onNomClient,
   onTelephoneClient,
+  onModePaiement,
   onQuantite,
   onRetirer,
   onEncaisser,
@@ -271,9 +284,11 @@ function Panier({
   total: number;
   nomClient: string;
   telephoneClient: string;
+  modePaiement: ModePaiement;
   enCours: boolean;
   onNomClient: (valeur: string) => void;
   onTelephoneClient: (valeur: string) => void;
+  onModePaiement: (mode: ModePaiement) => void;
   onQuantite: (produitId: number, quantite: number) => void;
   onRetirer: (produitId: number) => void;
   onEncaisser: () => void;
@@ -350,6 +365,25 @@ function Panier({
       </div>
 
       <div className="mt-4 grid gap-4 border-t border-line px-5 py-4">
+        <Champ
+          id="modePaiement"
+          libelle="Moyen de paiement"
+          obligatoire
+          indice="Détermine ce qui sera dans la caisse ce soir."
+        >
+          <Liste
+            {...liaisonsChamp("modePaiement", undefined, true)}
+            value={modePaiement}
+            onChange={(e) => onModePaiement(e.target.value as ModePaiement)}
+          >
+            {MODES_PAIEMENT.map((m) => (
+              <option key={m} value={m}>
+                {libelleModePaiement[m]}
+              </option>
+            ))}
+          </Liste>
+        </Champ>
+
         <Champ
           id="nomClient"
           libelle="Nom du client"

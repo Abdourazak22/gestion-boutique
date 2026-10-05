@@ -1,5 +1,5 @@
 import { api } from "./api";
-import type { Achat, Paginee } from "./types";
+import type { Achat, ModePaiement, Paginee } from "./types";
 
 /** Une ligne de `AchatRequest` : le prix de vente est fixé par le serveur. */
 export interface LigneAchatRequete {
@@ -10,6 +10,8 @@ export interface LigneAchatRequete {
 export interface AchatRequete {
   nomClient?: string;
   telephoneClient?: string;
+  /** Obligatoire : le serveur refuse une vente sans moyen de règlement. */
+  modePaiement: ModePaiement;
   lignes: LigneAchatRequete[];
 }
 

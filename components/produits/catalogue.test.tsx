@@ -122,3 +122,27 @@ describe("catalogue", () => {
     );
   });
 });
+
+/**
+ * L'effet de debounce s'armait au montage et remettait la page à zéro 300 ms
+ * plus tard. Un clic sur « Suivant » dans cet intervalle était donc annulé.
+ */
+describe("course entre la pagination et le debounce de recherche", () => {
+  it("ne ramène pas à la première page quand on pagine aussitôt après le chargement", async () => {
+    vi.mocked(listerProduits).mockImplementation(async (options) =>
+      page([{ ...PRODUIT, id: options?.page === 0 ? 1 : 2, nom: options?.page === 0 ? "Page zéro" : "Page une" }],
+        { number: options?.page ?? 0, totalElements: 20, totalPages: 2 }),
+    );
+
+    render(<Catalogue />);
+    await screen.findByText("Page zéro");
+
+    await userEvent.click(screen.getByRole("button", { name: /suivant/i }));
+    expect(await screen.findByText("Page une")).toBeInTheDocument();
+
+    // Au-delà du délai de debounce : la page ne doit pas avoir été réinitialisée.
+    await new Promise((resoudre) => setTimeout(resoudre, 450));
+    expect(screen.getByText("Page une")).toBeInTheDocument();
+    expect(screen.queryByText("Page zéro")).not.toBeInTheDocument();
+  });
+});

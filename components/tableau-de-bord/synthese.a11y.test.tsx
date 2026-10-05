@@ -31,6 +31,10 @@ const STATS: Statistiques = {
   livraisons: { nombre: 2, montantTotal: 48750 },
   stock: { references: 3, valeurAchat: 453200, valeurVente: 554500, enAlerte: 1 },
   ventesParJour: [{ jour: "2026-10-03", nombre: 4, montant: 109500 }],
+  ventesParMode: [
+    { mode: "ESPECES", nombre: 3, montant: 80000 },
+    { mode: "ORANGE_MONEY", nombre: 1, montant: 29500 },
+  ],
   meilleuresVentes: [
     { produitId: 1, nom: "Riz", quantite: 6, chiffreAffaires: 33000, marge: 6000 },
   ],

@@ -11,6 +11,14 @@ export type Role = "GERANT" | "VENDEUR";
 
 export type Sexe = "MASCULIN" | "FEMININ";
 
+/**
+ * Moyen de règlement d'une vente (`ModePaiement`).
+ *
+ * Les portefeuilles mobiles sont nommés par opérateur : au Burkina Faso ce sont
+ * deux comptes distincts, rapprochés séparément en fin de journée.
+ */
+export type ModePaiement = "ESPECES" | "ORANGE_MONEY" | "MOOV_MONEY" | "CARTE";
+
 export type UniteMesure =
   | "PIECE"
   | "KILOGRAMME"
@@ -65,6 +73,7 @@ export interface Achat {
   dateAchat: string;
   /** Prénom et nom du vendeur, déjà composés par le serveur. */
   vendeur: string;
+  modePaiement: ModePaiement;
   montantTotal: number;
   lignes: Ligne[];
 }
@@ -132,6 +141,13 @@ export interface ProduitVendu {
   marge: number;
 }
 
+/** Encaissements d'une période, ventilés par moyen de règlement. */
+export interface VentesParMode {
+  mode: ModePaiement;
+  nombre: number;
+  montant: number;
+}
+
 export interface Statistiques {
   du: string;
   au: string;
@@ -139,6 +155,7 @@ export interface Statistiques {
   livraisons: AgregatLivraisons;
   stock: AgregatStock;
   ventesParJour: VenteParJour[];
+  ventesParMode: VentesParMode[];
   meilleuresVentes: ProduitVendu[];
 }
 
@@ -149,6 +166,15 @@ export const panierMoyen = (v: AgregatVentes): number =>
 /** Part de marge dans le chiffre d'affaires, en pourcentage. */
 export const tauxMarge = (v: AgregatVentes): number =>
   v.chiffreAffaires === 0 ? 0 : (v.marge / v.chiffreAffaires) * 100;
+
+export const libelleModePaiement: Record<ModePaiement, string> = {
+  ESPECES: "Espèces",
+  ORANGE_MONEY: "Orange Money",
+  MOOV_MONEY: "Moov Money",
+  CARTE: "Carte",
+};
+
+export const MODES_PAIEMENT = Object.keys(libelleModePaiement) as ModePaiement[];
 
 export const libelleUnite: Record<UniteMesure, string> = {
   PIECE: "pièce",

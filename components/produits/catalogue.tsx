@@ -32,13 +32,21 @@ export function Catalogue({
 
   // Laisser retomber la frappe avant d'interroger l'API : une requête par
   // caractère saturerait le serveur pour un résultat qu'on jette aussitôt.
+  //
+  // La garde n'est pas une optimisation. Sans elle, l'effet s'armait aussi au
+  // montage et remettait la page à zéro 300 ms plus tard : un clic sur
+  // « Suivant » dans cet intervalle était annulé, et l'utilisateur revenait
+  // page 1 sans comprendre pourquoi. Remettre la pagination à zéro n'a de sens
+  // que lorsque le terme recherché change vraiment.
   useEffect(() => {
+    if (saisie === recherche) return;
+
     const minuteur = setTimeout(() => {
       setRecherche(saisie);
       setPage(0);
     }, 300);
     return () => clearTimeout(minuteur);
-  }, [saisie]);
+  }, [saisie, recherche]);
 
   const { donnees, chargement, erreur, recharger } = useRequete(
     `produits?nom=${recherche}&page=${page}&v=${version}`,

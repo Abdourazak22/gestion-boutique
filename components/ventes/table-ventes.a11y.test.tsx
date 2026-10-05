@@ -19,6 +19,7 @@ const ACHAT: Achat = {
   telephoneClient: "0700000000",
   dateAchat: "2026-10-05T11:42:00",
   vendeur: "Gerant Ouattara",
+  modePaiement: "ESPECES" as const,
   montantTotal: 18500,
   lignes: [
     { produitId: 1, nomProduit: "Riz", quantite: 3, prixUnitaire: 5500, montantLigne: 16500 },
