@@ -4,28 +4,36 @@ import userEvent from "@testing-library/user-event";
 import { TableVentes } from "./table-ventes";
 import { attendreAucuneInfraction } from "@/lib/aide-accessibilite";
 import type { Achat } from "@/lib/types";
+import { achatDeTest } from "@/lib/aide-test";
 
-vi.mock("@/lib/achats", () => ({ listerAchats: vi.fn(), ouvrirTicket: vi.fn() }));
+vi.mock("@/lib/achats", () => ({
+  listerAchats: vi.fn(),
+  ouvrirTicket: vi.fn(),
+  annulerAchat: vi.fn(),
+}));
+vi.mock("@/components/auth/session", () => ({
+  useSession: () => ({
+    utilisateur: {
+      id: 1, nom: "Ouattara", prenom: "Gerant", matricule: "MAT-0001",
+      sexe: "MASCULIN", dateNaissance: "1985-01-15",
+      identifiant: "gerant", role: "GERANT", actif: true,
+    },
+    deconnecter: vi.fn(),
+    deconnexionEnCours: false,
+  }),
+}));
 vi.mock("@/lib/notifier", () => ({
   notifier: { erreur: vi.fn(), succes: vi.fn(), pendant: vi.fn(), apresRedirection: vi.fn() },
 }));
 
 const { listerAchats } = await import("@/lib/achats");
 
-const ACHAT: Achat = {
-  id: 1,
-  numero: "ACH-20261005-0001",
-  nomClient: "Esther Kouadio",
-  telephoneClient: "0700000000",
-  dateAchat: "2026-10-05T11:42:00",
-  vendeur: "Gerant Ouattara",
-  modePaiement: "ESPECES" as const,
-  montantTotal: 18500,
+const ACHAT: Achat = achatDeTest({
   lignes: [
     { produitId: 1, nomProduit: "Riz", quantite: 3, prixUnitaire: 5500, montantLigne: 16500 },
     { produitId: 2, nomProduit: "Sucre", quantite: 2, prixUnitaire: 1000, montantLigne: 2000 },
   ],
-};
+});
 
 beforeEach(() => {
   vi.mocked(listerAchats).mockResolvedValue({

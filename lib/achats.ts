@@ -1,5 +1,5 @@
 import { api } from "./api";
-import type { Achat, ModePaiement, Paginee } from "./types";
+import type { Achat, ModePaiement, MotifAnnulation, Paginee } from "./types";
 
 /** Une ligne de `AchatRequest` : le prix de vente est fixé par le serveur. */
 export interface LigneAchatRequete {
@@ -37,6 +37,27 @@ export async function listerAchats(
 
 export async function achatParId(id: number, signal?: AbortSignal): Promise<Achat> {
   const { data } = await api.get<Achat>(`/achats/${id}`, { signal });
+  return data;
+}
+
+export interface AnnulationRequete {
+  motif: MotifAnnulation;
+  commentaire?: string;
+  /** La marchandise retourne-t-elle en rayon ? Le serveur l'exige explicitement. */
+  retourEnStock: boolean;
+}
+
+/**
+ * `PATCH /api/achats/{id}/annulation` : annule une vente, réservé au gérant.
+ *
+ * La vente n'est pas supprimée — son ticket a été remis au client — mais elle
+ * quitte le chiffre d'affaires, la marge et la ventilation par moyen.
+ */
+export async function annulerAchat(
+  id: number,
+  requete: AnnulationRequete,
+): Promise<Achat> {
+  const { data } = await api.patch<Achat>(`/achats/${id}/annulation`, requete);
   return data;
 }
 

@@ -1,5 +1,6 @@
 import { AxiosError, type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { api } from "./api";
+import type { Achat } from "./types";
 
 /**
  * Remplace l'adaptateur HTTP d'axios par une fonction de test.
@@ -68,4 +69,31 @@ export function simulerEmplacement(pathname: string) {
     value: faux,
   });
   return faux;
+}
+
+/**
+ * Achat de test complet, surchargeable champ par champ.
+ *
+ * La forme d'`Achat` grandit à chaque fonctionnalité — moyen de paiement,
+ * statut d'annulation. Une fabrique évite d'avoir à retoucher chaque fixture
+ * de chaque fichier de test à l'ajout d'un champ.
+ */
+export function achatDeTest(surcharges: Partial<Achat> = {}): Achat {
+  return {
+    id: 1,
+    numero: "ACH-20261005-0001",
+    nomClient: "Esther Kouadio",
+    telephoneClient: "0700000000",
+    dateAchat: "2026-10-05T11:42:00",
+    vendeur: "Gerant Ouattara",
+    modePaiement: "ESPECES",
+    statut: "PAYE",
+    motifAnnulation: null,
+    commentaireAnnulation: null,
+    dateAnnulation: null,
+    annulePar: null,
+    montantTotal: 18500,
+    lignes: [],
+    ...surcharges,
+  };
 }

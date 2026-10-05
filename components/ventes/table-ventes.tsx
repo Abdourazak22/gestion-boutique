@@ -8,7 +8,15 @@ import { IconFermer, IconImprimer, IconRecherche } from "@/components/icons";
 import { listerAchats, ouvrirTicket } from "@/lib/achats";
 import { useRequete } from "@/lib/requete";
 import { notifier } from "@/lib/notifier";
-import { libelleModePaiement, type Achat } from "@/lib/types";
+import {
+  libelleModePaiement,
+  libelleMotifAnnulation,
+  type Achat,
+} from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { DialogueAnnulation } from "@/components/ventes/dialogue-annulation";
+import { useSession } from "@/components/auth/session";
+import { IconAlerte, IconCheck } from "@/components/icons";
 import { dateCourte, dateLongue, fcfa, heure } from "@/lib/format";
 import { messageErreur } from "@/lib/api";
 
@@ -22,6 +30,9 @@ const PAR_PAGE = 20;
  * à l'utilisateur plutôt que laissé deviner.
  */
 export function TableVentes() {
+  const { utilisateur } = useSession();
+  const [aAnnuler, setAAnnuler] = useState<Achat | null>(null);
+  const [version, setVersion] = useState(0);
   const [du, setDu] = useState("");
   const [au, setAu] = useState("");
   const [page, setPage] = useState(0);
@@ -30,7 +41,7 @@ export function TableVentes() {
   const [ouvert, setOuvert] = useState<number | null>(null);
 
   const { donnees, chargement, erreur, recharger } = useRequete(
-    `achats?du=${du}&au=${au}&page=${page}`,
+    `achats?du=${du}&au=${au}&page=${page}&v=${version}`,
     (signal) =>
       listerAchats(
         { du: du || undefined, au: au || undefined, page, size: PAR_PAGE },
@@ -166,6 +177,7 @@ export function TableVentes() {
                     <th scope="col" className="py-2.5 font-medium">Client</th>
                     <th scope="col" className="py-2.5 font-medium">Vendeur</th>
                     <th scope="col" className="py-2.5 font-medium">Paiement</th>
+                    <th scope="col" className="py-2.5 font-medium">Statut</th>
                     <th scope="col" className="py-2.5 font-medium">Articles</th>
                     <th scope="col" className="py-2.5 text-right font-medium">Total</th>
                     <th scope="col" className="py-2.5 pr-4 text-right font-medium">Date</th>
@@ -222,10 +234,25 @@ export function TableVentes() {
                       <td className="py-3 text-[13px] text-ink-2">
                         {libelleModePaiement[a.modePaiement]}
                       </td>
+                      <td className="py-3">
+                        {a.statut === "ANNULE" ? (
+                          <Badge ton="critical" icone={<IconAlerte className="h-3.5 w-3.5" />}>
+                            Annulée
+                          </Badge>
+                        ) : (
+                          <Badge ton="good" icone={<IconCheck className="h-3.5 w-3.5" />}>
+                            Payée
+                          </Badge>
+                        )}
+                      </td>
                       <td className="tnum py-3 text-[13px] text-ink-2">
                         {a.lignes.length}
                       </td>
-                      <td className="tnum py-3 text-right text-[13px] font-semibold text-ink">
+                      <td
+                        className={`tnum py-3 text-right text-[13px] font-semibold ${
+                          a.statut === "ANNULE" ? "text-ink-3 line-through" : "text-ink"
+                        }`}
+                      >
                         {fcfa(a.montantTotal)}
                       </td>
                       <td className="tnum py-3 pr-4 text-right text-[13px] text-ink-2">
@@ -235,7 +262,7 @@ export function TableVentes() {
                   ))}
                   {visibles.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center">
+                      <td colSpan={9} className="px-4 py-12 text-center">
                         <p className="text-sm font-medium text-ink">
                           Aucune vente ne correspond
                         </p>
@@ -279,13 +306,39 @@ export function TableVentes() {
         )}
       </section>
 
-      {detail ? <Ticket achat={detail} onFermer={() => setOuvert(null)} /> : null}
+      {detail ? (
+        <Ticket
+          achat={detail}
+          estGerant={utilisateur.role === "GERANT"}
+          onFermer={() => setOuvert(null)}
+          onDemanderAnnulation={() => setAAnnuler(detail)}
+        />
+      ) : null}
+
+      {/* Montée à l'ouverture seulement : le démontage remet le formulaire à blanc. */}
+      {aAnnuler ? (
+        <DialogueAnnulation
+          achat={aAnnuler}
+          onFermer={() => setAAnnuler(null)}
+          onAnnule={() => setVersion((v) => v + 1)}
+        />
+      ) : null}
     </div>
   );
 }
 
 /** Ticket de caisse : exigence « imprimer le ticket de caisse ». */
-function Ticket({ achat, onFermer }: { achat: Achat; onFermer: () => void }) {
+function Ticket({
+  achat,
+  estGerant,
+  onFermer,
+  onDemanderAnnulation,
+}: {
+  achat: Achat;
+  estGerant: boolean;
+  onFermer: () => void;
+  onDemanderAnnulation: () => void;
+}) {
   return (
     <aside className="h-fit rounded-card border border-line bg-surface xl:sticky xl:top-6">
       <header className="flex items-center justify-between gap-3 rounded-t-card bg-shell px-4 py-3 text-white">
@@ -299,6 +352,28 @@ function Ticket({ achat, onFermer }: { achat: Achat; onFermer: () => void }) {
           <IconFermer className="h-4 w-4" />
         </button>
       </header>
+
+      {achat.statut === "ANNULE" ? (
+        <div
+          role="status"
+          className="flex items-start gap-2 border-b border-line bg-[#fdecec] px-4 py-3"
+        >
+          <IconAlerte className="mt-px h-4 w-4 shrink-0 text-critical" />
+          <div className="text-[11px] leading-relaxed text-[#9d2626]">
+            <p className="font-semibold">Vente annulée</p>
+            <p>
+              {achat.motifAnnulation
+                ? libelleMotifAnnulation[achat.motifAnnulation]
+                : "Motif non précisé"}
+              {achat.annulePar ? ` · par ${achat.annulePar}` : ""}
+              {achat.dateAnnulation ? ` · ${dateLongue(achat.dateAnnulation)}` : ""}
+            </p>
+            {achat.commentaireAnnulation ? (
+              <p className="mt-0.5 italic">« {achat.commentaireAnnulation} »</p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <div className="space-y-1 border-b border-line px-4 py-4">
         <div className="flex items-center gap-2.5">
@@ -359,8 +434,18 @@ function Ticket({ achat, onFermer }: { achat: Achat; onFermer: () => void }) {
         </div>
       </div>
 
-      <div className="border-t border-line p-3">
+      <div className="space-y-2 border-t border-line p-3">
         <BoutonTicket achat={achat} />
+
+        {estGerant && achat.statut === "PAYE" ? (
+          <button
+            type="button"
+            onClick={onDemanderAnnulation}
+            className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-line text-sm font-medium text-critical transition-colors duration-200 hover:bg-[#fdecec]"
+          >
+            Annuler cette vente
+          </button>
+        ) : null}
       </div>
     </aside>
   );

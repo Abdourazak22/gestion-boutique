@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FormulaireVente } from "./formulaire-vente";
 import type { Paginee, Produit } from "@/lib/types";
+import { achatDeTest } from "@/lib/aide-test";
 
 const remplacer = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: remplacer }) }));
@@ -150,17 +151,9 @@ describe("composition du panier", () => {
 
 describe("encaissement", () => {
   it("envoie les lignes et le client, puis renvoie à l'historique", async () => {
-    vi.mocked(enregistrerAchat).mockResolvedValue({
-      id: 7,
-      numero: "ACH-20261005-0001",
-      nomClient: "Esther",
-      telephoneClient: null,
-      dateAchat: "2026-10-05T10:00:00",
-      vendeur: "Gerant Ouattara",
-  modePaiement: "ESPECES" as const,
-      montantTotal: 6500,
-      lignes: [],
-    });
+    vi.mocked(enregistrerAchat).mockResolvedValue(
+      achatDeTest({ id: 7, numero: "ACH-20261005-0001", nomClient: "Esther", telephoneClient: null, montantTotal: 6500 }),
+    );
 
     render(<FormulaireVente />);
     await ajouter("Riz");
@@ -183,17 +176,9 @@ describe("encaissement", () => {
   });
 
   it("omet le nom quand il est vide : une vente anonyme reste valide", async () => {
-    vi.mocked(enregistrerAchat).mockResolvedValue({
-      id: 8,
-      numero: "ACH-20261005-0002",
-      nomClient: null,
-      telephoneClient: null,
-      dateAchat: "2026-10-05T10:00:00",
-      vendeur: "Gerant Ouattara",
-  modePaiement: "ESPECES" as const,
-      montantTotal: 5500,
-      lignes: [],
-    });
+    vi.mocked(enregistrerAchat).mockResolvedValue(
+      achatDeTest({ id: 8, numero: "ACH-20261005-0002", nomClient: null, telephoneClient: null, montantTotal: 5500 }),
+    );
 
     render(<FormulaireVente />);
     await ajouter("Riz");
@@ -261,17 +246,9 @@ describe("moyen de paiement", () => {
   });
 
   it("transmet le moyen choisi au serveur", async () => {
-    vi.mocked(enregistrerAchat).mockResolvedValue({
-      id: 9,
-      numero: "ACH-20261005-0009",
-      nomClient: null,
-      telephoneClient: null,
-      dateAchat: "2026-10-05T10:00:00",
-      vendeur: "Gerant Ouattara",
-      modePaiement: "ORANGE_MONEY",
-      montantTotal: 5500,
-      lignes: [],
-    });
+    vi.mocked(enregistrerAchat).mockResolvedValue(
+      achatDeTest({ id: 9, numero: "ACH-20261005-0009", nomClient: null, telephoneClient: null, montantTotal: 5500, modePaiement: "ORANGE_MONEY" }),
+    );
 
     render(<FormulaireVente />);
     await ajouter("Riz");
@@ -289,17 +266,9 @@ describe("moyen de paiement", () => {
   });
 
   it("envoie toujours un moyen, même sans intervention du vendeur", async () => {
-    vi.mocked(enregistrerAchat).mockResolvedValue({
-      id: 10,
-      numero: "ACH-20261005-0010",
-      nomClient: null,
-      telephoneClient: null,
-      dateAchat: "2026-10-05T10:00:00",
-      vendeur: "Gerant Ouattara",
-      modePaiement: "ESPECES",
-      montantTotal: 5500,
-      lignes: [],
-    });
+    vi.mocked(enregistrerAchat).mockResolvedValue(
+      achatDeTest({ id: 10, numero: "ACH-20261005-0010", nomClient: null, telephoneClient: null, montantTotal: 5500, modePaiement: "ESPECES" }),
+    );
 
     render(<FormulaireVente />);
     await ajouter("Riz");

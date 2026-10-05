@@ -19,6 +19,19 @@ export type Sexe = "MASCULIN" | "FEMININ";
  */
 export type ModePaiement = "ESPECES" | "ORANGE_MONEY" | "MOOV_MONEY" | "CARTE";
 
+/**
+ * État d'une vente. Pas de « remboursé » distinct d'« annulé » : les deux
+ * rendent l'argent et sortent la vente du chiffre d'affaires. Ce qui diffère
+ * est la raison, portée par `MotifAnnulation`.
+ */
+export type StatutAchat = "PAYE" | "ANNULE";
+
+export type MotifAnnulation =
+  | "ERREUR_SAISIE"
+  | "RETOUR_CLIENT"
+  | "PRODUIT_DEFECTUEUX"
+  | "AUTRE";
+
 export type UniteMesure =
   | "PIECE"
   | "KILOGRAMME"
@@ -74,6 +87,12 @@ export interface Achat {
   /** Prénom et nom du vendeur, déjà composés par le serveur. */
   vendeur: string;
   modePaiement: ModePaiement;
+  statut: StatutAchat;
+  motifAnnulation: MotifAnnulation | null;
+  commentaireAnnulation: string | null;
+  dateAnnulation: string | null;
+  /** Prénom et nom de qui a annulé, composés par le serveur. */
+  annulePar: string | null;
   montantTotal: number;
   lignes: Ligne[];
 }
@@ -175,6 +194,25 @@ export const libelleModePaiement: Record<ModePaiement, string> = {
 };
 
 export const MODES_PAIEMENT = Object.keys(libelleModePaiement) as ModePaiement[];
+
+export const libelleMotifAnnulation: Record<MotifAnnulation, string> = {
+  ERREUR_SAISIE: "Erreur de saisie",
+  RETOUR_CLIENT: "Retour client",
+  PRODUIT_DEFECTUEUX: "Produit défectueux",
+  AUTRE: "Autre",
+};
+
+export const MOTIFS_ANNULATION = Object.keys(
+  libelleMotifAnnulation,
+) as MotifAnnulation[];
+
+/**
+ * Le retour en rayon suggéré par défaut selon le motif. Une erreur de saisie
+ * n'a jamais sorti la marchandise ; un produit défectueux ne doit pas revenir
+ * comme vendable. Le vendeur peut toujours trancher autrement.
+ */
+export const retourEnStockParDefaut = (motif: MotifAnnulation): boolean =>
+  motif !== "PRODUIT_DEFECTUEUX";
 
 export const libelleUnite: Record<UniteMesure, string> = {
   PIECE: "pièce",
