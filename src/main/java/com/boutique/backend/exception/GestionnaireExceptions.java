@@ -40,7 +40,7 @@ public class GestionnaireExceptions {
 
     /**
      * Paramètre de requête inconvertible : une date écrite « 03/10/2026 » plutôt
-     * qu'en ISO, par exemple. C'est une faute du client, pas du serveur — sans
+     * qu'en ISO, par exemple. C'est une faute du client, pas du serveur : sans
      * ce cas, elle tombait dans le fourre-tout et ressortait en 500.
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

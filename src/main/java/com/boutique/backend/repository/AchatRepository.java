@@ -33,7 +33,7 @@ public interface AchatRepository extends JpaRepository<Achat, Long> {
      *
      * Le coût de revient vient du prix d'achat figé dans la ligne ; pour les
      * lignes antérieures à ce champ, on retombe sur le prix d'achat courant du
-     * produit — approximation assumée plutôt qu'une marge nulle.
+     * produit, approximation assumée plutôt qu'une marge nulle.
      */
     @Query("""
             select new com.boutique.backend.dto.AgregatVentes(
