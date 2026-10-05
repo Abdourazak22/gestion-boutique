@@ -20,5 +20,6 @@ public record StatistiquesResponse(
         AgregatLivraisons livraisons,
         AgregatStock stock,
         List<VenteParJour> ventesParJour,
+        List<VentesParMode> ventesParMode,
         List<ProduitVendu> meilleuresVentes) {
 }

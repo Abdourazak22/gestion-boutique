@@ -5,6 +5,7 @@ import com.boutique.backend.dto.TicketPdf;
 import com.boutique.backend.exception.RessourceIntrouvableException;
 import com.boutique.backend.model.Achat;
 import com.boutique.backend.model.LigneAchat;
+import com.boutique.backend.model.ModePaiement;
 import com.boutique.backend.repository.AchatRepository;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -87,11 +88,24 @@ public class TicketService {
         lignes.add(separateur('-'));
 
         lignes.add(deuxColonnes("TOTAL " + boutique.devise(), montant(achat.getMontantTotal())));
+        if (achat.getModePaiement() != null) {
+            lignes.add(deuxColonnes("Paiement", libelle(achat.getModePaiement())));
+        }
         lignes.add(separateur('='));
         lignes.add("");
         lignes.add(centrer("Merci de votre visite !"));
 
         return lignes;
+    }
+
+    /** Nom lisible du moyen de paiement : « ORANGE_MONEY » ne s'imprime pas. */
+    private String libelle(ModePaiement mode) {
+        return switch (mode) {
+            case ESPECES -> "Especes";
+            case ORANGE_MONEY -> "Orange Money";
+            case MOOV_MONEY -> "Moov Money";
+            case CARTE -> "Carte";
+        };
     }
 
     private byte[] dessiner(java.util.List<String> lignes) {

@@ -48,7 +48,7 @@ class TicketTest {
                         .header("Authorization", "Bearer " + jeton)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nomClient":"Awa Kone",
+                                {"modePaiement":"ESPECES","nomClient":"Awa Kone",
                                  "lignes":[{"produitId":%d,"quantite":3},
                                            {"produitId":%d,"quantite":2}]}"""
                                 .formatted(rizId, sucreId)))

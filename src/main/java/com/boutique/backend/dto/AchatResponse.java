@@ -1,6 +1,7 @@
 package com.boutique.backend.dto;
 
 import com.boutique.backend.model.Achat;
+import com.boutique.backend.model.ModePaiement;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,6 +13,7 @@ public record AchatResponse(
         String telephoneClient,
         LocalDateTime dateAchat,
         String vendeur,
+        ModePaiement modePaiement,
         BigDecimal montantTotal,
         List<LigneAchatResponse> lignes) {
 
@@ -23,6 +25,7 @@ public record AchatResponse(
                 achat.getTelephoneClient(),
                 achat.getDateAchat(),
                 achat.getVendeur().getPrenom() + " " + achat.getVendeur().getNom(),
+                achat.getModePaiement(),
                 achat.getMontantTotal(),
                 achat.getLignes().stream().map(LigneAchatResponse::de).toList());
     }

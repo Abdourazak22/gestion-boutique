@@ -73,7 +73,7 @@ class StatistiquesControllerTest {
         sucreId = enregistrer("Sucre statistiques", "200.00", "500.00", 3, 5);
 
         vendre("""
-                {"lignes":[{"produitId":%d,"quantite":3},{"produitId":%d,"quantite":2}]}"""
+                {"modePaiement":"ESPECES","lignes":[{"produitId":%d,"quantite":3},{"produitId":%d,"quantite":2}]}"""
                 .formatted(rizId, sucreId));
     }
 

@@ -1,7 +1,10 @@
 package com.boutique.backend.exception;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 import java.util.Map;
+import tools.jackson.databind.exc.InvalidFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -12,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -36,6 +40,34 @@ public class GestionnaireExceptions {
     ResponseEntity<ApiError> validationParametres(HandlerMethodValidationException exception) {
         return ResponseEntity.badRequest()
                 .body(ApiError.de(400, "Paramètres de requête invalides"));
+    }
+
+    /**
+     * Corps de requête illisible : JSON mal formé, type incompatible, ou valeur
+     * hors d'une énumération. C'est une faute du client — sans ce cas, elle
+     * tombait dans le fourre-tout et ressortait en 500.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<ApiError> corpsIllisible(HttpMessageNotReadableException exception) {
+        Throwable cause = exception.getCause();
+
+        if (cause instanceof InvalidFormatException format
+                && format.getTargetType() != null
+                && format.getTargetType().isEnum()) {
+            // `List.getLast()` est du Java 21 ; le projet cible 17. Et en
+            // Jackson 3 l'accesseur s'appelle `getPropertyName()`.
+            var chemin = format.getPath();
+            String champ = chemin.isEmpty()
+                    ? "corps" : chemin.get(chemin.size() - 1).getPropertyName();
+            String valeurs = Arrays.stream(format.getTargetType().getEnumConstants())
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(", "));
+            return ResponseEntity.badRequest().body(ApiError.de(400, "Requête invalide",
+                    Map.of(champ, "Valeur attendue parmi : " + valeurs)));
+        }
+
+        return ResponseEntity.badRequest()
+                .body(ApiError.de(400, "Corps de requête illisible"));
     }
 
     /**

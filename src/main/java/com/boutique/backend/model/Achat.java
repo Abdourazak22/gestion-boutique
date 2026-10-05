@@ -2,6 +2,8 @@ package com.boutique.backend.model;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -54,6 +56,15 @@ public class Achat {
 
     @Column(name = "montant_total", nullable = false, precision = 14, scale = 2)
     private BigDecimal montantTotal = BigDecimal.ZERO;
+
+    /**
+     * Moyen de règlement, obligatoire : sans lui, impossible de savoir en fin
+     * de journée ce qui doit se trouver dans le tiroir-caisse et ce qui a été
+     * reçu sur un portefeuille mobile.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mode_paiement", nullable = false, length = 20)
+    private ModePaiement modePaiement;
 
     @OneToMany(mappedBy = "achat", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LigneAchat> lignes = new ArrayList<>();

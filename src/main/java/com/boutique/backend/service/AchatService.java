@@ -51,6 +51,7 @@ public class AchatService {
         Achat achat = new Achat();
         achat.setDateAchat(LocalDateTime.now());
         achat.setVendeur(utilisateurService.parIdentifiant(identifiantVendeur));
+        achat.setModePaiement(requete.modePaiement());
         achat.setNomClient(requete.nomClient());
         achat.setTelephoneClient(requete.telephoneClient());
         achat.setNumero(prochainNumero());

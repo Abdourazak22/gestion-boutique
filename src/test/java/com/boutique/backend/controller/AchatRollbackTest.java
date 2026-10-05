@@ -64,7 +64,7 @@ class AchatRollbackTest {
         mockMvc.perform(post("/api/achats").header("Authorization", "Bearer " + jeton)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"lignes":[{"produitId":%d,"quantite":2},
+                                {"modePaiement":"ESPECES","lignes":[{"produitId":%d,"quantite":2},
                                            {"produitId":%d,"quantite":999}]}"""
                                 .formatted(rizId, sucreId)))
                 .andExpect(status().isConflict());
@@ -82,7 +82,7 @@ class AchatRollbackTest {
         mockMvc.perform(post("/api/achats").header("Authorization", "Bearer " + jeton)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"lignes":[{"produitId":%d,"quantite":2}]}""".formatted(rizId)))
+                                {"modePaiement":"ESPECES","lignes":[{"produitId":%d,"quantite":2}]}""".formatted(rizId)))
                 .andExpect(status().isCreated());
 
         assertThat(produitRepository.findById(rizId).orElseThrow().getQuantiteStock())

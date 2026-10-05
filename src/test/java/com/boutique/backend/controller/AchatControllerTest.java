@@ -47,7 +47,7 @@ class AchatControllerTest {
         mockMvc.perform(post("/api/achats").header("Authorization", "Bearer " + jeton)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nomClient":"Awa Kone","telephoneClient":"0700000000",
+                                {"modePaiement":"ESPECES","nomClient":"Awa Kone","telephoneClient":"0700000000",
                                  "lignes":[{"produitId":%d,"quantite":3},
                                            {"produitId":%d,"quantite":2}]}"""
                                 .formatted(rizId, sucreId)))
@@ -76,7 +76,7 @@ class AchatControllerTest {
         mockMvc.perform(post("/api/achats").header("Authorization", "Bearer " + jeton)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"lignes":[{"produitId":%d,"quantite":2},
+                                {"modePaiement":"ESPECES","lignes":[{"produitId":%d,"quantite":2},
                                            {"produitId":%d,"quantite":999}]}"""
                                 .formatted(rizId, sucreId)))
                 .andExpect(status().isConflict())
@@ -89,7 +89,7 @@ class AchatControllerTest {
         mockMvc.perform(post("/api/achats").header("Authorization", "Bearer " + jeton)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nomClient":"Awa","lignes":[]}"""))
+                                {"modePaiement":"ESPECES","nomClient":"Awa","lignes":[]}"""))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.champs.lignes").isNotEmpty());
     }
@@ -99,7 +99,7 @@ class AchatControllerTest {
         mockMvc.perform(post("/api/achats").header("Authorization", "Bearer " + jeton)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"lignes":[{"produitId":%d,"quantite":0}]}""".formatted(rizId)))
+                                {"modePaiement":"ESPECES","lignes":[{"produitId":%d,"quantite":0}]}""".formatted(rizId)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -108,7 +108,7 @@ class AchatControllerTest {
         mockMvc.perform(post("/api/achats").header("Authorization", "Bearer " + jeton)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"lignes":[{"produitId":%d,"quantite":1},
+                                {"modePaiement":"ESPECES","lignes":[{"produitId":%d,"quantite":1},
                                            {"produitId":%d,"quantite":2}]}"""
                                 .formatted(rizId, rizId)))
                 .andExpect(status().isConflict())
@@ -121,7 +121,7 @@ class AchatControllerTest {
         mockMvc.perform(post("/api/achats").header("Authorization", "Bearer " + jeton)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"lignes":[{"produitId":999999,"quantite":1}]}"""))
+                                {"modePaiement":"ESPECES","lignes":[{"produitId":999999,"quantite":1}]}"""))
                 .andExpect(status().isNotFound());
     }
 
@@ -177,7 +177,7 @@ class AchatControllerTest {
                         .header("Authorization", "Bearer " + jeton)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"lignes":[{"produitId":%d,"quantite":%d}]}"""
+                                {"modePaiement":"ESPECES","lignes":[{"produitId":%d,"quantite":%d}]}"""
                                 .formatted(produitId, quantite)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();

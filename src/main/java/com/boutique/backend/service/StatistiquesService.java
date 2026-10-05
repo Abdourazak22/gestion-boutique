@@ -61,6 +61,7 @@ public class StatistiquesService {
                 livraisonRepository.agregerLivraisons(deDebut, aFin),
                 produitRepository.agregerStock(),
                 achatRepository.ventesParJour(deDebut, aFin),
+                achatRepository.ventesParModePaiement(deDebut, aFin),
                 achatRepository.meilleuresVentes(deDebut, aFin,
                         PageRequest.ofSize(TAILLE_CLASSEMENT)));
     }

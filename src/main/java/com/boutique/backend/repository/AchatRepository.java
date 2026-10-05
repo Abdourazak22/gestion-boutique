@@ -3,6 +3,7 @@ package com.boutique.backend.repository;
 import com.boutique.backend.dto.AgregatVentes;
 import com.boutique.backend.dto.ProduitVendu;
 import com.boutique.backend.dto.VenteParJour;
+import com.boutique.backend.dto.VentesParMode;
 import com.boutique.backend.model.Achat;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -63,6 +64,25 @@ public interface AchatRepository extends JpaRepository<Achat, Long> {
             """)
     List<VenteParJour> ventesParJour(@Param("debut") LocalDateTime debut,
                                      @Param("fin") LocalDateTime fin);
+
+    /**
+     * Répartition des encaissements par moyen de règlement, du plus gros au
+     * plus petit. Les ventes antérieures à l'introduction du champ n'ont pas de
+     * mode et sont écartées plutôt que rangées dans une catégorie fausse.
+     */
+    @Query("""
+            select new com.boutique.backend.dto.VentesParMode(
+                a.modePaiement,
+                count(a),
+                coalesce(sum(a.montantTotal), 0))
+            from Achat a
+            where a.dateAchat between :debut and :fin
+                and a.modePaiement is not null
+            group by a.modePaiement
+            order by sum(a.montantTotal) desc
+            """)
+    List<VentesParMode> ventesParModePaiement(@Param("debut") LocalDateTime debut,
+                                              @Param("fin") LocalDateTime fin);
 
     /**
      * Produits les plus vendus de la période, par chiffre d'affaires décroissant.
