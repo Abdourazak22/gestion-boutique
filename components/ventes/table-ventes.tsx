@@ -157,7 +157,11 @@ export function TableVentes() {
                 </caption>
                 <thead>
                   <tr className="border-b border-line text-[11px] tracking-wide text-ink-2 uppercase">
-                    <th scope="col" className="w-10 py-2.5 pl-4" />
+                    <th scope="col" className="w-10 py-2.5 pl-4">
+                      {/* Un en-tête vide ne laisse rien à annoncer sur les
+                          cellules de cette colonne : axe le relève. */}
+                      <span className="sr-only">Sélection</span>
+                    </th>
                     <th scope="col" className="py-2.5 font-medium">Vente</th>
                     <th scope="col" className="py-2.5 font-medium">Client</th>
                     <th scope="col" className="py-2.5 font-medium">Vendeur</th>
@@ -170,6 +174,9 @@ export function TableVentes() {
                   {visibles.map((a) => (
                     <tr
                       key={a.id}
+                      /* Confort du pointeur : toute la ligne ouvre le ticket.
+                         L'accès au clavier passe par le bouton du numéro, un
+                         `<tr>` n'étant ni focalisable ni activable. */
                       onClick={() => setOuvert(a.id)}
                       className={`cursor-pointer border-b border-line/70 transition-colors duration-200 last:border-0 ${
                         a.id === ouvert ? "bg-brand-50" : "hover:bg-plane"
@@ -185,7 +192,17 @@ export function TableVentes() {
                           className="h-4 w-4 cursor-pointer accent-brand-500"
                         />
                       </td>
-                      <td className="tnum py-3 font-medium text-ink">{a.numero}</td>
+                      <td className="py-3">
+                        <button
+                          type="button"
+                          onClick={() => setOuvert(a.id)}
+                          aria-expanded={a.id === ouvert}
+                          aria-label={`Ouvrir le ticket ${a.numero}`}
+                          className="tnum cursor-pointer rounded font-medium text-ink underline-offset-4 hover:underline focus:outline-2 focus:outline-offset-2 focus:outline-brand-500"
+                        >
+                          {a.numero}
+                        </button>
+                      </td>
                       <td className="py-3">
                         {a.nomClient ? (
                           <div className="flex items-center gap-2.5">

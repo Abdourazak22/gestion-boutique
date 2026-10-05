@@ -21,7 +21,10 @@
   /* --- Encres --- */
   --color-ink: #0b0b0b;
   --color-ink-2: #52514e;
-  --color-ink-3: #898781;
+  /* Assombri pour atteindre le contraste AA (4,5:1) : la valeur precedente,
+     #898781, plafonnait a 3,59 sur blanc et 3,26 sur --color-plane, alors
+     qu'elle porte du texte informatif (placeholders, libelles d'axe, seuils). */
+  --color-ink-3: #706f6a;
   --color-line: #e5e5e0;
 
   /* --- Statuts (palette réservée, jamais utilisée comme couleur de série) --- */

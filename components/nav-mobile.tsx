@@ -26,7 +26,10 @@ export function NavMobile() {
 
   return (
     <nav
-      aria-label="Navigation principale"
+      /* Nom distinct de celui de la barre latérale : les deux coexistent dans
+         le DOM et seul le CSS en masque une. Deux repères homonymes rendent la
+         navigation au lecteur d'écran ambiguë dès que cette règle change. */
+      aria-label="Onglets de navigation"
       className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface lg:hidden"
     >
       <ul className="flex">
