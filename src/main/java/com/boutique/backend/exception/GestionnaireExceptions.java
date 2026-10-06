@@ -81,6 +81,12 @@ public class GestionnaireExceptions {
                 Map.of(exception.getName(), "Valeur attendue au format yyyy-MM-dd")));
     }
 
+    @ExceptionHandler(RequeteInvalideException.class)
+    ResponseEntity<ApiError> requeteInvalide(RequeteInvalideException exception) {
+        return ResponseEntity.badRequest()
+                .body(ApiError.de(400, exception.getMessage(), exception.getChamps()));
+    }
+
     @ExceptionHandler(RessourceIntrouvableException.class)
     ResponseEntity<ApiError> introuvable(RessourceIntrouvableException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)

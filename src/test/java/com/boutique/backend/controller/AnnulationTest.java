@@ -13,6 +13,7 @@ import com.boutique.backend.model.Sexe;
 import com.boutique.backend.model.UniteMesure;
 import com.boutique.backend.model.Utilisateur;
 import com.boutique.backend.repository.AchatRepository;
+import com.boutique.backend.repository.MouvementStockRepository;
 import com.boutique.backend.repository.ProduitRepository;
 import com.boutique.backend.repository.UtilisateurRepository;
 import com.boutique.backend.service.UtilisateurService;
@@ -48,6 +49,9 @@ class AnnulationTest {
     ProduitRepository produitRepository;
 
     @Autowired
+    MouvementStockRepository mouvementStockRepository;
+
+    @Autowired
     AchatRepository achatRepository;
 
     @Autowired
@@ -75,6 +79,8 @@ class AnnulationTest {
     @AfterEach
     void nettoyer() {
         achatRepository.deleteAll();
+        // Avant les produits : le journal des mouvements les reference.
+        mouvementStockRepository.deleteAll();
         produitRepository.deleteAll();
         utilisateurRepository.findByIdentifiant(VENDEUR)
                 .ifPresent(utilisateurRepository::delete);

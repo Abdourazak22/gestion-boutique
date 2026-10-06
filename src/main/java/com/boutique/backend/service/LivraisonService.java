@@ -58,7 +58,8 @@ public class LivraisonService {
         livraison.setNumero(prochainNumero());
 
         for (LigneLivraisonRequest ligne : requete.lignes()) {
-            Produit produit = produitService.entrerEnStock(ligne.produitId(), ligne.quantite());
+            Produit produit = produitService.entrerParLivraison(ligne.produitId(),
+                    ligne.quantite(), livraison.getReceptionniste(), livraison.getNumero());
             BigDecimal prix = ligne.prixUnitaire() != null
                     ? ligne.prixUnitaire()
                     : produit.getPrixAchat();

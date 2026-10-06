@@ -83,6 +83,19 @@
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<!-- Migrations de schema : la base n'est plus modifiee a la main, et
+		     ddl-auto passe de update a validate.
+		     spring-boot-flyway et non flyway-core : depuis Spring Boot 4
+		     l'autoconfiguration vit dans un module dedie, et flyway-core seul
+		     met bien la bibliotheque au classpath sans jamais la declencher. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>

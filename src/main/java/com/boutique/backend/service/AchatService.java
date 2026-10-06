@@ -10,6 +10,7 @@ import com.boutique.backend.model.Achat;
 import com.boutique.backend.model.LigneAchat;
 import com.boutique.backend.model.Produit;
 import com.boutique.backend.model.StatutAchat;
+import com.boutique.backend.model.Utilisateur;
 import com.boutique.backend.repository.AchatRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -59,7 +60,8 @@ public class AchatService {
         achat.setNumero(prochainNumero());
 
         for (LigneAchatRequest ligne : requete.lignes()) {
-            Produit produit = produitService.sortirDuStock(ligne.produitId(), ligne.quantite());
+            Produit produit = produitService.sortirPourVente(
+                    ligne.produitId(), ligne.quantite(), achat.getVendeur(), achat.getNumero());
             achat.ajouterLigne(LigneAchat.de(produit, ligne.quantite()));
         }
         achat.recalculerTotal();
@@ -89,11 +91,16 @@ public class AchatService {
                     "La vente " + achat.getNumero() + " est déjà annulée");
         }
 
+        // Résolu avant la boucle : l'auteur figure sur chaque mouvement de
+        // retour, et le relire à chaque ligne n'apporterait rien.
+        Utilisateur auteur = utilisateurService.parIdentifiant(identifiantAuteur);
+
         if (Boolean.TRUE.equals(requete.retourEnStock())) {
             for (LigneAchat ligne : achat.getLignes()) {
                 // Même point d'entrée que les livraisons : le verrou optimiste
                 // du produit protège des annulations concurrentes.
-                produitService.entrerEnStock(ligne.getProduit().getId(), ligne.getQuantite());
+                produitService.retournerApresAnnulation(ligne.getProduit().getId(),
+                        ligne.getQuantite(), auteur, achat.getNumero());
             }
         }
 
@@ -101,7 +108,7 @@ public class AchatService {
         achat.setMotifAnnulation(requete.motif());
         achat.setCommentaireAnnulation(requete.commentaire());
         achat.setDateAnnulation(LocalDateTime.now());
-        achat.setAnnulePar(utilisateurService.parIdentifiant(identifiantAuteur));
+        achat.setAnnulePar(auteur);
 
         return AchatResponse.de(achat);
     }

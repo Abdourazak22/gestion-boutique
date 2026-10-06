@@ -2,6 +2,7 @@ package com.boutique.backend.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -110,7 +111,28 @@ class ProduitControllerTest {
     }
 
     @Test
-    void modification_met_a_jour_le_stock_et_leve_l_alerte() throws Exception {
+    void modification_change_le_prix_sans_toucher_au_stock() throws Exception {
+        long id = creerRiz();
+
+        mockMvc.perform(put("/api/produits/" + id)
+                        .header("Authorization", "Bearer " + jetonGerant)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nom":"Riz parfume 5kg","prixAchat":4500.00,"prixVente":6000.00,
+                                 "unite":"SACHET","seuilAlerte":5}"""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.prixVente").value(6000.00))
+                .andExpect(jsonPath("$.quantiteStock").value(30));
+    }
+
+    /**
+     * Ce corps etait accepte, et c'etait le defaut : il ecrivait le stock en
+     * valeur absolue, telle qu'elle avait ete lue a l'ouverture du formulaire.
+     * Une vente saisie entre-temps par un autre utilisateur disparaissait donc
+     * du stock, sans trace.
+     */
+    @Test
+    void modification_qui_tente_d_ecrire_le_stock_est_refusee() throws Exception {
         long id = creerRiz();
 
         mockMvc.perform(put("/api/produits/" + id)
@@ -119,9 +141,104 @@ class ProduitControllerTest {
                         .content("""
                                 {"nom":"Riz parfume 5kg","prixAchat":4500.00,"prixVente":6000.00,
                                  "unite":"SACHET","quantiteStock":2,"seuilAlerte":5}"""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.champs.quantiteStock").exists());
+
+        mockMvc.perform(get("/api/produits/" + id)
+                        .header("Authorization", "Bearer " + jetonGerant))
+                .andExpect(jsonPath("$.quantiteStock").value(30));
+    }
+
+    @Test
+    void ajustement_aligne_le_stock_sur_le_comptage_et_journalise_l_ecart() throws Exception {
+        long id = creerRiz();
+
+        mockMvc.perform(patch("/api/produits/" + id + "/ajustement")
+                        .header("Authorization", "Bearer " + jetonGerant)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"quantiteComptee":28,"motif":"CASSE",
+                                 "commentaire":"Deux sachets eventres"}"""))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.prixVente").value(6000.00))
-                .andExpect(jsonPath("$.enAlerteStock").value(true));
+                .andExpect(jsonPath("$.quantiteStock").value(28));
+
+        mockMvc.perform(get("/api/produits/" + id + "/mouvements")
+                        .header("Authorization", "Bearer " + jetonGerant))
+                .andExpect(status().isOk())
+                // Le plus recent d'abord : l'ajustement, puis le stock initial.
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].type").value("AJUSTEMENT"))
+                .andExpect(jsonPath("$.content[0].variation").value(-2))
+                .andExpect(jsonPath("$.content[0].stockAvant").value(30))
+                .andExpect(jsonPath("$.content[0].stockApres").value(28))
+                .andExpect(jsonPath("$.content[0].motif").value("CASSE"))
+                .andExpect(jsonPath("$.content[0].commentaire").value("Deux sachets eventres"))
+                .andExpect(jsonPath("$.content[0].auteur").isString())
+                .andExpect(jsonPath("$.content[1].type").value("INITIAL"))
+                .andExpect(jsonPath("$.content[1].variation").value(30));
+    }
+
+    @Test
+    void ecart_de_stock_sans_motif_est_refuse() throws Exception {
+        long id = creerRiz();
+
+        mockMvc.perform(patch("/api/produits/" + id + "/ajustement")
+                        .header("Authorization", "Bearer " + jetonGerant)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"quantiteComptee":28}"""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.champs.motif").exists());
+    }
+
+    /**
+     * Un comptage qui confirme le stock n'a aucun motif a fournir, et merite
+     * tout de meme sa ligne : savoir qu'un produit a ete verifie tel jour est
+     * une information.
+     */
+    @Test
+    void comptage_conforme_est_enregistre_sans_motif() throws Exception {
+        long id = creerRiz();
+
+        mockMvc.perform(patch("/api/produits/" + id + "/ajustement")
+                        .header("Authorization", "Bearer " + jetonGerant)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"quantiteComptee":30}"""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quantiteStock").value(30));
+
+        mockMvc.perform(get("/api/produits/" + id + "/mouvements")
+                        .header("Authorization", "Bearer " + jetonGerant))
+                .andExpect(jsonPath("$.content[0].type").value("AJUSTEMENT"))
+                .andExpect(jsonPath("$.content[0].variation").value(0))
+                .andExpect(jsonPath("$.content[0].motif").doesNotExist());
+    }
+
+    /**
+     * L'ajustement est le mecanisme qui permettrait de faire disparaitre un
+     * manquant : celui qui tient la caisse ne doit pas pouvoir effacer l'ecart
+     * qu'elle laisse, ni consulter le registre ou il se lit.
+     */
+    @Test
+    void un_vendeur_ne_peut_ni_ajuster_le_stock_ni_lire_le_journal() throws Exception {
+        long id = creerRiz();
+        utilisateurService.creer(Utilisateur.builder()
+                .nom("Sawadogo").prenom("Issa").matricule("MAT-9002")
+                .sexe(Sexe.MASCULIN).dateNaissance(LocalDate.of(1995, 7, 14))
+                .identifiant("vendeur-stock").role(Role.VENDEUR).build(), "vendeur123");
+        String jetonVendeur = jeton("vendeur-stock", "vendeur123");
+
+        mockMvc.perform(patch("/api/produits/" + id + "/ajustement")
+                        .header("Authorization", "Bearer " + jetonVendeur)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"quantiteComptee":0,"motif":"VOL"}"""))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/produits/" + id + "/mouvements")
+                        .header("Authorization", "Bearer " + jetonVendeur))
+                .andExpect(status().isForbidden());
     }
 
     @Test

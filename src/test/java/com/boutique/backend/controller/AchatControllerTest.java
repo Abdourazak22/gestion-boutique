@@ -134,9 +134,11 @@ class AchatControllerTest {
                         .put("/api/produits/" + rizId)
                         .header("Authorization", "Bearer " + jeton)
                         .contentType(MediaType.APPLICATION_JSON)
+                        // Plus de quantiteStock a tenir a jour ici : la modification
+                        // d'un produit ne touche plus a son stock.
                         .content("""
                                 {"nom":"Riz parfume 5kg","prixAchat":4500.00,"prixVente":9999.00,
-                                 "unite":"SACHET","quantiteStock":19,"seuilAlerte":5}"""))
+                                 "unite":"SACHET","seuilAlerte":5}"""))
                 .andExpect(status().isOk());
 
         // ... mais l'historique garde le prix d'origine.

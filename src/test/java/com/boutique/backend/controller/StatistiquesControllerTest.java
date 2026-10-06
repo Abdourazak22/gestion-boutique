@@ -12,6 +12,7 @@ import com.boutique.backend.model.UniteMesure;
 import com.boutique.backend.model.Utilisateur;
 import com.boutique.backend.repository.AchatRepository;
 import com.boutique.backend.repository.LivraisonRepository;
+import com.boutique.backend.repository.MouvementStockRepository;
 import com.boutique.backend.repository.ProduitRepository;
 import com.boutique.backend.repository.UtilisateurRepository;
 import com.boutique.backend.service.UtilisateurService;
@@ -49,6 +50,9 @@ class StatistiquesControllerTest {
     ProduitRepository produitRepository;
 
     @Autowired
+    MouvementStockRepository mouvementStockRepository;
+
+    @Autowired
     AchatRepository achatRepository;
 
     @Autowired
@@ -81,6 +85,8 @@ class StatistiquesControllerTest {
     void nettoyer() {
         achatRepository.deleteAll();
         livraisonRepository.deleteAll();
+        // Avant les produits : le journal des mouvements les reference.
+        mouvementStockRepository.deleteAll();
         produitRepository.deleteAll();
         // Sans @Transactional, le vendeur créé par un test survivrait à la
         // classe et fausserait le comptage des autres suites.

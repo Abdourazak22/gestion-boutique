@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.boutique.backend.model.Produit;
 import com.boutique.backend.model.UniteMesure;
 import com.boutique.backend.repository.AchatRepository;
+import com.boutique.backend.repository.MouvementStockRepository;
 import com.boutique.backend.repository.ProduitRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -40,6 +41,9 @@ class ModePaiementTest {
     ProduitRepository produitRepository;
 
     @Autowired
+    MouvementStockRepository mouvementStockRepository;
+
+    @Autowired
     AchatRepository achatRepository;
 
     private String jeton;
@@ -61,6 +65,8 @@ class ModePaiementTest {
     @AfterEach
     void nettoyer() {
         achatRepository.deleteAll();
+        // Avant les produits : le journal des mouvements les reference.
+        mouvementStockRepository.deleteAll();
         produitRepository.deleteAll();
     }
 
