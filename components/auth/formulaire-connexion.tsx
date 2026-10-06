@@ -26,7 +26,13 @@ export function FormulaireConnexion() {
   const router = useRouter();
   const [identifiant, setIdentifiant] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
-  const [memoriser, setMemoriser] = useState(true);
+  // Décoché par défaut, et c'est un choix de sécurité, pas une préférence :
+  // le poste du comptoir est partagé entre le gérant et les vendeurs. Coché,
+  // le jeton part dans localStorage et survit à la fermeture du navigateur
+  // pendant toute sa durée de vie ; quiconque rouvre l'application sur cet
+  // appareil entre avec les droits du dernier connecté. Décoché, il vit dans
+  // sessionStorage et meurt avec l'onglet.
+  const [memoriser, setMemoriser] = useState(false);
   const [enCours, setEnCours] = useState(false);
 
   async function soumettre(evenement: React.FormEvent<HTMLFormElement>) {
@@ -102,8 +108,10 @@ export function FormulaireConnexion() {
         </div>
       </div>
 
-      {/* Se souvenir de moi + bouton flèche, comme dans la maquette.
-          Case à cocher et non bouton radio : l'option est binaire. */}
+      {/* Case à cocher et non bouton radio : l'option est binaire.
+          Le libellé s'écarte de la maquette, qui disait « Se souvenir de
+          moi » : la formule laisse croire qu'on mémorise un identifiant,
+          alors qu'on laisse une session ouverte sur la machine. */}
       <div className="flex items-center justify-between gap-4 pt-1">
         <label
           htmlFor="memoriser"
@@ -117,7 +125,7 @@ export function FormulaireConnexion() {
             onChange={(e) => setMemoriser(e.target.checked)}
             className="h-4 w-4 cursor-pointer rounded accent-brand-500"
           />
-          Se souvenir de moi
+          Rester connecté sur cet appareil
         </label>
 
         <button

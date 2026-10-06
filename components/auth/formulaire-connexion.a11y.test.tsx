@@ -19,7 +19,9 @@ describe("accessibilité du formulaire de connexion", () => {
 
     expect(screen.getByLabelText(/nom d’utilisateur/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/mot de passe/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/se souvenir de moi/i)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/rester connecté sur cet appareil/i),
+    ).toBeInTheDocument();
   });
 
   it("nomme le bouton de soumission, dont l'icône seule ne dirait rien", () => {
