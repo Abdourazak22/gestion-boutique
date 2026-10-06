@@ -1,15 +1,41 @@
 import { api } from "./api";
-import type { Paginee, Produit, UniteMesure } from "./types";
+import type {
+  MotifAjustement,
+  MouvementStock,
+  Paginee,
+  Produit,
+  UniteMesure,
+} from "./types";
 
-/** Corps attendu par `POST`/`PUT /api/produits` (`ProduitRequest`). */
+/** Corps attendu par `POST /api/produits` (`ProduitRequest`). */
 export interface ProduitRequete {
   nom: string;
   description?: string | null;
   prixAchat: number;
   prixVente: number;
   unite: UniteMesure;
+  /** Stock de départ, inscrit au journal comme premier mouvement du produit. */
   quantiteStock: number;
   seuilAlerte: number;
+}
+
+/**
+ * Corps attendu par `PUT /api/produits/{id}` (`ProduitUpdateRequest`).
+ *
+ * Sans `quantiteStock`, et ce n'est pas un oubli : le serveur refuse ce champ
+ * en 400. Il l'acceptait, et l'écrivait en valeur absolue, ce qui effaçait du
+ * stock toute vente enregistrée depuis l'ouverture du formulaire. Le stock se
+ * corrige par `ajusterStock`.
+ */
+export type ProduitModificationRequete = Omit<ProduitRequete, "quantiteStock">;
+
+/** Corps attendu par `PATCH /api/produits/{id}/ajustement`. */
+export interface AjustementRequete {
+  /** Ce qui a réellement été compté en rayon. Le serveur en déduit l'écart. */
+  quantiteComptee: number;
+  /** Obligatoire seulement s'il y a un écart à justifier. */
+  motif?: MotifAjustement | null;
+  commentaire?: string | null;
 }
 
 export interface OptionsCatalogue {
@@ -55,12 +81,40 @@ export async function creerProduit(requete: ProduitRequete): Promise<Produit> {
   return data;
 }
 
-/** `PUT /api/produits/{id}` : réservé au rôle GERANT. */
+/** `PUT /api/produits/{id}` : réservé au rôle GERANT. Ne touche pas au stock. */
 export async function modifierProduit(
   id: number,
-  requete: ProduitRequete,
+  requete: ProduitModificationRequete,
 ): Promise<Produit> {
   const { data } = await api.put<Produit>(`/produits/${id}`, requete);
+  return data;
+}
+
+/**
+ * `PATCH /api/produits/{id}/ajustement` : aligne le stock enregistré sur le
+ * stock compté en rayon. Réservé au rôle GERANT.
+ */
+export async function ajusterStock(
+  id: number,
+  requete: AjustementRequete,
+): Promise<Produit> {
+  const { data } = await api.patch<Produit>(`/produits/${id}/ajustement`, requete);
+  return data;
+}
+
+/**
+ * `GET /api/produits/{id}/mouvements` : journal de stock du produit, du plus
+ * récent au plus ancien. Réservé au rôle GERANT.
+ */
+export async function listerMouvements(
+  id: number,
+  { page = 0, size = 10 } = {},
+  signal?: AbortSignal,
+): Promise<Paginee<MouvementStock>> {
+  const { data } = await api.get<Paginee<MouvementStock>>(
+    `/produits/${id}/mouvements`,
+    { params: { page, size }, signal },
+  );
   return data;
 }
 

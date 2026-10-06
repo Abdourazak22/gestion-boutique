@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Erreur, PageHorsLimites, Squelette, Vide } from "@/components/ui/etats";
-import { IconAlerte, IconCheck, IconRecherche } from "@/components/icons";
+import { IconAlerte, IconCheck, IconInventaire, IconRecherche } from "@/components/icons";
+import { Inventaire } from "@/components/produits/inventaire";
 import { listerProduits } from "@/lib/produits";
 import { useRequete } from "@/lib/requete";
 import { libelleUnite, marge, type Produit } from "@/lib/types";
@@ -21,12 +22,21 @@ const PAR_PAGE = 12;
 export function Catalogue({
   version = 0,
   rechercheInitiale = "",
+  estGerant = false,
 }: {
   version?: number;
   /** Terme venu de l'URL (recherche lancée depuis la barre du haut). */
   rechercheInitiale?: string;
+  /**
+   * Ouvre l'inventaire sur chaque produit. Faux par défaut : le rôle est lu
+   * par l'écran parent, qui dispose de la session, pour que ce composant
+   * reste montable sans elle.
+   */
+  estGerant?: boolean;
 }) {
   const [saisie, setSaisie] = useState(rechercheInitiale);
+  // Produit en cours de comptage, nul quand la boîte est fermée.
+  const [inventorie, setInventorie] = useState<Produit | null>(null);
   const [recherche, setRecherche] = useState(rechercheInitiale);
   const [page, setPage] = useState(0);
 
@@ -108,7 +118,10 @@ export function Catalogue({
           <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {donnees?.content.map((p) => (
               <li key={p.id}>
-                <CarteProduit produit={p} />
+                <CarteProduit
+                  produit={p}
+                  onInventaire={estGerant ? () => setInventorie(p) : undefined}
+                />
               </li>
             ))}
           </ul>
@@ -120,13 +133,32 @@ export function Catalogue({
               onChanger={setPage}
             />
           ) : null}
+
+          {/* Montée à l'ouverture et démontée à la fermeture : le journal
+              qu'elle affiche est rechargé à chaque comptage, et les champs
+              repartent vierges. `recharger` remet le catalogue à jour, le
+              stock affiché venant de changer. */}
+          {inventorie ? (
+            <Inventaire
+              produit={inventorie}
+              onFermer={() => setInventorie(null)}
+              onAjuste={recharger}
+            />
+          ) : null}
         </>
       )}
     </>
   );
 }
 
-function CarteProduit({ produit: p }: { produit: Produit }) {
+function CarteProduit({
+  produit: p,
+  onInventaire,
+}: {
+  produit: Produit;
+  /** Absent pour un vendeur : l'ajustement de stock lui est refusé en 403. */
+  onInventaire?: () => void;
+}) {
   // Le remplissage se lit par rapport à trois fois le seuil : au-delà, le
   // stock est confortable et la nuance n'apporte plus rien.
   const reference = Math.max(p.seuilAlerte * 3, 1);
@@ -191,6 +223,22 @@ function CarteProduit({ produit: p }: { produit: Produit }) {
           />
         </div>
       </div>
+
+      {onInventaire ? (
+        <button
+          type="button"
+          onClick={onInventaire}
+          // Nom accessible porte par aria-label et non par un span
+          // complementaire : le calcul du nom concatene les noeuds sans
+          // separateur, ce qui annoncait « Inventairede Riz parfume ». Le
+          // libelle visible reste contenu dans le nom accessible.
+          aria-label={`Inventaire de ${p.nom}`}
+          className="mt-4 inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-line px-3 text-[13px] font-medium text-ink transition-colors duration-200 hover:border-brand-300 hover:text-brand-600"
+        >
+          <IconInventaire className="h-4 w-4" />
+          Inventaire
+        </button>
+      ) : null}
     </article>
   );
 }

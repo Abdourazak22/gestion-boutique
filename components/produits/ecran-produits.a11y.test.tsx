@@ -18,12 +18,17 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/auth/session", () => ({
   useSession: () => ({ utilisateur: GERANT, deconnecter: vi.fn(), deconnexionEnCours: false }),
 }));
-vi.mock("@/lib/produits", () => ({ listerProduits: vi.fn(), creerProduit: vi.fn() }));
+vi.mock("@/lib/produits", () => ({
+  listerProduits: vi.fn(),
+  creerProduit: vi.fn(),
+  ajusterStock: vi.fn(),
+  listerMouvements: vi.fn(),
+}));
 vi.mock("@/lib/notifier", () => ({
   notifier: { erreur: vi.fn(), succes: vi.fn(), pendant: vi.fn(), apresRedirection: vi.fn() },
 }));
 
-const { listerProduits } = await import("@/lib/produits");
+const { listerProduits, listerMouvements } = await import("@/lib/produits");
 
 const PRODUIT: Produit = {
   id: 1, nom: "Riz parfumé 25 kg", description: "Sac importé",
@@ -36,12 +41,35 @@ beforeEach(() => {
     content: [PRODUIT],
     page: { size: 12, number: 0, totalElements: 1, totalPages: 1 },
   });
+  vi.mocked(listerMouvements).mockResolvedValue({
+    content: [
+      {
+        id: 1, type: "INITIAL", variation: 9, stockAvant: 0, stockApres: 9,
+        motif: null, commentaire: null, reference: null, auteur: "Gerant Ouattara",
+        date: "2026-10-05T13:47:27.169197Z",
+      },
+    ],
+    page: { size: 8, number: 0, totalElements: 1, totalPages: 1 },
+  });
 });
 
 describe("accessibilité de l'écran Produits", () => {
   it("ne présente aucune infraction, catalogue chargé", async () => {
     const { container } = render(<EcranProduits />);
     await screen.findByText("Riz parfumé 25 kg");
+
+    await attendreAucuneInfraction(container);
+  });
+
+  it("ne présente aucune infraction, inventaire ouvert", async () => {
+    const { container } = render(<EcranProduits />);
+    await screen.findByText("Riz parfumé 25 kg");
+
+    await userEvent.click(screen.getByRole("button", { name: /inventaire de/i }));
+    await screen.findByRole("dialog");
+    // Le journal doit etre charge : une boite a moitie remplie ne prouverait
+    // rien de son etat final.
+    await screen.findByText("Stock initial");
 
     await attendreAucuneInfraction(container);
   });

@@ -43,7 +43,7 @@ export function EcranProduits() {
       {/* `useSearchParams` dans une page prérendue impose une frontière
           Suspense, sinon le build de production échoue. */}
       <Suspense fallback={<Squelette className="h-96" />}>
-        <CatalogueDepuisUrl version={version} />
+        <CatalogueDepuisUrl version={version} estGerant={estGerant} />
       </Suspense>
 
       {/* Monté seulement à l'ouverture, et démonté à la fermeture : les champs
@@ -64,7 +64,20 @@ export function EcranProduits() {
  * remontage à chaque nouveau terme : l'état local du catalogue repart de la
  * bonne valeur, sans synchronisation manuelle dans un effet.
  */
-function CatalogueDepuisUrl({ version }: { version: number }) {
+function CatalogueDepuisUrl({
+  version,
+  estGerant,
+}: {
+  version: number;
+  estGerant: boolean;
+}) {
   const nom = useSearchParams().get("nom") ?? "";
-  return <Catalogue key={nom} version={version} rechercheInitiale={nom} />;
+  return (
+    <Catalogue
+      key={nom}
+      version={version}
+      rechercheInitiale={nom}
+      estGerant={estGerant}
+    />
+  );
 }

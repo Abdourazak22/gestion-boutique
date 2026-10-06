@@ -40,6 +40,23 @@ export type UniteMesure =
   | "SACHET"
   | "CARTON";
 
+/** `TypeMouvement` : nature d'une variation de stock. */
+export type TypeMouvement =
+  | "INITIAL"
+  | "ENTREE"
+  | "SORTIE"
+  | "RETOUR"
+  | "AJUSTEMENT";
+
+/** `MotifAjustement` : pourquoi le stock compté diffère du stock enregistré. */
+export type MotifAjustement =
+  | "CASSE"
+  | "PEREMPTION"
+  | "VOL"
+  | "ERREUR_SAISIE"
+  | "DON"
+  | "AUTRE";
+
 /** `UtilisateurResponse` */
 export interface Utilisateur {
   id: number;
@@ -65,6 +82,27 @@ export interface Produit {
   seuilAlerte: number;
   /** Calculé par le serveur : `quantiteStock <= seuilAlerte`. */
   enAlerteStock: boolean;
+}
+
+/**
+ * `MouvementStockResponse` : une ligne du journal de stock d'un produit.
+ *
+ * `variation` est signée. `auteur` est nul pour la reprise de stock insérée
+ * lors de la mise en place du journal, qui précède tout utilisateur connu.
+ */
+export interface MouvementStock {
+  id: number;
+  type: TypeMouvement;
+  variation: number;
+  stockAvant: number;
+  stockApres: number;
+  motif: MotifAjustement | null;
+  commentaire: string | null;
+  /** Numéro de la vente ou de la livraison à l'origine du mouvement. */
+  reference: string | null;
+  auteur: string | null;
+  /** Instant ISO, en UTC. */
+  date: string;
 }
 
 /** `LigneAchatResponse` et `LigneLivraisonResponse` ont la même forme. */
@@ -213,6 +251,27 @@ export const MOTIFS_ANNULATION = Object.keys(
  */
 export const retourEnStockParDefaut = (motif: MotifAnnulation): boolean =>
   motif !== "PRODUIT_DEFECTUEUX";
+
+export const libelleTypeMouvement: Record<TypeMouvement, string> = {
+  INITIAL: "Stock initial",
+  ENTREE: "Livraison",
+  SORTIE: "Vente",
+  RETOUR: "Retour",
+  AJUSTEMENT: "Inventaire",
+};
+
+export const libelleMotifAjustement: Record<MotifAjustement, string> = {
+  CASSE: "Casse",
+  PEREMPTION: "Péremption",
+  VOL: "Vol ou démarque inconnue",
+  ERREUR_SAISIE: "Erreur de saisie",
+  DON: "Don ou consommation sur place",
+  AUTRE: "Autre",
+};
+
+export const MOTIFS_AJUSTEMENT = Object.keys(
+  libelleMotifAjustement,
+) as MotifAjustement[];
 
 export const libelleUnite: Record<UniteMesure, string> = {
   PIECE: "pièce",
