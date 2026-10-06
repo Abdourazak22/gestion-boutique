@@ -35,11 +35,6 @@ export async function listerAchats(
   return data;
 }
 
-export async function achatParId(id: number, signal?: AbortSignal): Promise<Achat> {
-  const { data } = await api.get<Achat>(`/achats/${id}`, { signal });
-  return data;
-}
-
 export interface AnnulationRequete {
   motif: MotifAnnulation;
   commentaire?: string;

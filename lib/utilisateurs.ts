@@ -35,14 +35,6 @@ export async function listerUtilisateurs(
   return data;
 }
 
-export async function utilisateurParId(
-  id: number,
-  signal?: AbortSignal,
-): Promise<Utilisateur> {
-  const { data } = await api.get<Utilisateur>(`/utilisateurs/${id}`, { signal });
-  return data;
-}
-
 export async function creerUtilisateur(
   requete: UtilisateurRequete,
 ): Promise<Utilisateur> {

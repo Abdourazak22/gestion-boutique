@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { Champ, liaisonsChamp, Liste, Saisie, Zone } from "@/components/ui/champ";
 import { Dialogue } from "@/components/ui/dialogue";
-import { BoutonSecondaire } from "@/components/ui/entete-page";
+import { PiedFormulaire } from "@/components/ui/pied-formulaire";
 import { champsErreur } from "@/lib/api";
 import { notifier } from "@/lib/notifier";
 import {
@@ -291,22 +291,13 @@ export function FormulaireProduit({
           ) : null}
         </div>
 
-        <div className="mt-6 flex items-center justify-end gap-2 border-t border-line pt-4">
-          <BoutonSecondaire onClick={onFermer} disabled={enCours}>
-            Annuler
-          </BoutonSecondaire>
-          <button
-            type="submit"
-            disabled={enCours}
-            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white transition-colors duration-200 hover:bg-brand-600 disabled:cursor-progress disabled:bg-brand-500/60"
-          >
-            {enCours
-              ? "Enregistrement…"
-              : modification
-                ? "Enregistrer les modifications"
-                : "Ajouter le produit"}
-          </button>
-        </div>
+        <PiedFormulaire
+          onFermer={onFermer}
+          enCours={enCours}
+          soumettre={
+            modification ? "Enregistrer les modifications" : "Ajouter le produit"
+          }
+        />
       </form>
     </Dialogue>
   );

@@ -118,7 +118,3 @@ export async function listerMouvements(
   return data;
 }
 
-/** `DELETE /api/produits/{id}` : suppression logique, réservée au GERANT. */
-export async function supprimerProduit(id: number): Promise<void> {
-  await api.delete(`/produits/${id}`);
-}

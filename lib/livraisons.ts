@@ -27,14 +27,6 @@ export async function listerLivraisons(
   return data;
 }
 
-export async function livraisonParId(
-  id: number,
-  signal?: AbortSignal,
-): Promise<Livraison> {
-  const { data } = await api.get<Livraison>(`/livraisons/${id}`, { signal });
-  return data;
-}
-
 /** `POST /api/livraisons` : entrée en stock, réservée au rôle GERANT. */
 export async function enregistrerLivraison(
   requete: LivraisonRequete,

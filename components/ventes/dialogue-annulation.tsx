@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { Champ, liaisonsChamp, Liste, Zone } from "@/components/ui/champ";
 import { Dialogue } from "@/components/ui/dialogue";
-import { BoutonSecondaire } from "@/components/ui/entete-page";
+import { PiedFormulaire } from "@/components/ui/pied-formulaire";
 import { champsErreur } from "@/lib/api";
 import { annulerAchat } from "@/lib/achats";
 import { notifier } from "@/lib/notifier";
@@ -137,18 +137,14 @@ export function DialogueAnnulation({
           </Champ>
         </div>
 
-        <div className="mt-6 flex items-center justify-end gap-2 border-t border-line pt-4">
-          <BoutonSecondaire onClick={onFermer} disabled={enCours}>
-            Renoncer
-          </BoutonSecondaire>
-          <button
-            type="submit"
-            disabled={enCours}
-            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-critical px-4 text-sm font-semibold text-white transition-opacity duration-200 hover:opacity-90 disabled:cursor-progress disabled:opacity-60"
-          >
-            {enCours ? "Annulation…" : "Annuler la vente"}
-          </button>
-        </div>
+        <PiedFormulaire
+          onFermer={onFermer}
+          enCours={enCours}
+          soumettre="Annuler la vente"
+          enCoursLibelle="Annulation…"
+          annuler="Renoncer"
+          critique
+        />
       </form>
     </Dialogue>
   );
