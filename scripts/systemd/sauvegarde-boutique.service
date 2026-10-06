@@ -1,0 +1,37 @@
+# Sauvegarde quotidienne de la base de la boutique.
+#
+# Unité « utilisateur » et non système : le script s'authentifie via le
+# ~/.pgpass de l'utilisateur, qui n'est lisible que par lui.
+#
+# Installation : voir scripts/systemd/README.md
+
+[Unit]
+Description=Sauvegarde de la base de la boutique
+Documentation=file:%h/Test/backend/scripts/sauvegarde.sh
+# Pas de dépendance sur postgresql.service : c'est une unité utilisateur, elle
+# ne peut pas ordonner une unité système. Si la base est injoignable, le script
+# échoue proprement et OnFailure déclenche la notification.
+OnFailure=sauvegarde-boutique-echec.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/Test/backend/scripts/sauvegarde.sh
+
+# Destination : à repointer vers un disque externe quand il y en a un branché.
+# Environment=BOUTIQUE_SAUVEGARDES=/run/media/%u/disque/sauvegardes/boutique
+Environment=BOUTIQUE_RETENTION=7
+
+# La sortie du script part dans le journal :
+#   journalctl --user -u sauvegarde-boutique
+StandardOutput=journal
+StandardError=journal
+
+# Garde-fou : un pg_dump qui part en vrille ne doit pas tourner indéfiniment.
+TimeoutStartSec=30min
+
+# Durcissement raisonnable pour un script qui ne fait que lire la base et
+# écrire un fichier.
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+NoNewPrivileges=true
