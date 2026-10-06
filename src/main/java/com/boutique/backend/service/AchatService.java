@@ -4,6 +4,8 @@ import com.boutique.backend.dto.AchatRequest;
 import com.boutique.backend.dto.AnnulationRequest;
 import com.boutique.backend.dto.AchatResponse;
 import com.boutique.backend.dto.LigneAchatRequest;
+import com.boutique.backend.dto.LigneProduit;
+import com.boutique.backend.dto.PlageDeDates;
 import com.boutique.backend.exception.ConflitException;
 import com.boutique.backend.exception.RessourceIntrouvableException;
 import com.boutique.backend.model.Achat;
@@ -15,8 +17,6 @@ import com.boutique.backend.repository.AchatRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
-import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -49,7 +49,7 @@ public class AchatService {
      */
     @Transactional
     public AchatResponse enregistrer(AchatRequest requete, String identifiantVendeur) {
-        verifierProduitsDistincts(requete.lignes());
+        LigneProduit.verifierDistincts(requete.lignes());
 
         Achat achat = new Achat();
         achat.setDateAchat(LocalDateTime.now());
@@ -126,22 +126,9 @@ public class AchatService {
         if (du == null && au == null) {
             return achatRepository.findAllBy(pagination).map(AchatResponse::de);
         }
-        LocalDateTime debut = du != null ? du.atStartOfDay() : LocalDate.of(1970, 1, 1).atStartOfDay();
-        LocalDateTime fin = au != null ? au.atTime(23, 59, 59) : LocalDateTime.now().plusYears(100);
-        if (debut.isAfter(fin)) {
-            throw new ConflitException("La date de début est postérieure à la date de fin");
-        }
-        return achatRepository.findByDateAchatBetween(debut, fin, pagination).map(AchatResponse::de);
-    }
-
-    private void verifierProduitsDistincts(java.util.List<LigneAchatRequest> lignes) {
-        Set<Long> vus = new HashSet<>();
-        for (LigneAchatRequest ligne : lignes) {
-            if (!vus.add(ligne.produitId())) {
-                throw new ConflitException("Le produit " + ligne.produitId()
-                        + " apparaît plusieurs fois : regroupez-le en une seule ligne");
-            }
-        }
+        PlageDeDates plage = PlageDeDates.de(du, au);
+        return achatRepository.findByDateAchatBetween(plage.debut(), plage.fin(), pagination)
+                .map(AchatResponse::de);
     }
 
     /**
@@ -152,8 +139,8 @@ public class AchatService {
      */
     private String prochainNumero() {
         LocalDate aujourdhui = LocalDate.now();
-        long rang = achatRepository.countByDateAchatBetween(
-                aujourdhui.atStartOfDay(), aujourdhui.atTime(23, 59, 59)) + 1;
+        PlageDeDates jour = PlageDeDates.journee(aujourdhui);
+        long rang = achatRepository.countByDateAchatBetween(jour.debut(), jour.fin()) + 1;
         return "ACH-%s-%04d".formatted(aujourdhui.format(JOUR), rang);
     }
 }

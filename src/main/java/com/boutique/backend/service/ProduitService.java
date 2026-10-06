@@ -1,6 +1,7 @@
 package com.boutique.backend.service;
 
 import com.boutique.backend.dto.AjustementStockRequest;
+import com.boutique.backend.dto.ChampsProduit;
 import com.boutique.backend.dto.MouvementStockResponse;
 import com.boutique.backend.dto.ProduitRequest;
 import com.boutique.backend.dto.ProduitResponse;
@@ -64,12 +65,7 @@ public class ProduitService {
 
         Produit produit = existant != null ? existant : new Produit();
         produit.setActif(true);
-        produit.setNom(requete.nom().trim());
-        produit.setDescription(requete.description());
-        produit.setPrixAchat(requete.prixAchat());
-        produit.setPrixVente(requete.prixVente());
-        produit.setUnite(requete.unite());
-        produit.setSeuilAlerte(requete.seuilAlerte());
+        appliquer(requete, produit);
 
         Produit enregistre = produitRepository.save(produit);
 
@@ -105,13 +101,7 @@ public class ProduitService {
             throw new ConflitException("Un autre produit porte déjà le nom « " + requete.nom() + " »");
         }
         verifierCoherencePrix(requete.prixAchat(), requete.prixVente());
-
-        produit.setNom(requete.nom().trim());
-        produit.setDescription(requete.description());
-        produit.setPrixAchat(requete.prixAchat());
-        produit.setPrixVente(requete.prixVente());
-        produit.setUnite(requete.unite());
-        produit.setSeuilAlerte(requete.seuilAlerte());
+        appliquer(requete, produit);
 
         return ProduitResponse.de(produit);
     }
@@ -246,6 +236,19 @@ public class ProduitService {
                 .auteur(auteur)
                 .reference(reference)
                 .build());
+    }
+
+    /**
+     * Recopie les champs communs à la création et à la modification. Le stock
+     * n'en fait pas partie : il ne bouge que par {@link #journaliser}.
+     */
+    private void appliquer(ChampsProduit requete, Produit produit) {
+        produit.setNom(requete.nom().trim());
+        produit.setDescription(requete.description());
+        produit.setPrixAchat(requete.prixAchat());
+        produit.setPrixVente(requete.prixVente());
+        produit.setUnite(requete.unite());
+        produit.setSeuilAlerte(requete.seuilAlerte());
     }
 
     private Produit parIdOuErreur(Long id) {

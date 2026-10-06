@@ -58,5 +58,5 @@ public record ProduitUpdateRequest(
          * Mieux vaut une erreur qui dit où corriger le stock.
          */
         @Null(message = "Le stock ne se modifie pas ici : utiliser l'ajustement d'inventaire")
-        Integer quantiteStock) {
+        Integer quantiteStock) implements ChampsProduit {
 }

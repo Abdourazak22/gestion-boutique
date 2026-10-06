@@ -15,5 +15,5 @@ public record LigneLivraisonRequest(
         /** Prix payé au grossiste. Si absent, le prix d'achat courant du produit est utilisé. */
         @DecimalMin(value = "0.0", message = "Le prix unitaire ne peut être négatif")
         @Digits(integer = 10, fraction = 2, message = "Le prix unitaire doit avoir au plus 2 décimales")
-        BigDecimal prixUnitaire) {
+        BigDecimal prixUnitaire) implements LigneProduit {
 }

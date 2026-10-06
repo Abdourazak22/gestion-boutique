@@ -36,5 +36,5 @@ public record ProduitRequest(
 
         @NotNull(message = "Le seuil d'alerte est obligatoire")
         @Min(value = 0, message = "Le seuil d'alerte ne peut être négatif")
-        Integer seuilAlerte) {
+        Integer seuilAlerte) implements ChampsProduit {
 }

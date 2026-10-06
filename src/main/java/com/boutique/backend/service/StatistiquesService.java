@@ -1,5 +1,6 @@
 package com.boutique.backend.service;
 
+import com.boutique.backend.dto.PlageDeDates;
 import com.boutique.backend.dto.StatistiquesResponse;
 import com.boutique.backend.exception.ConflitException;
 import com.boutique.backend.repository.AchatRepository;
@@ -46,13 +47,11 @@ public class StatistiquesService {
         LocalDate debut = du != null ? du : aujourdhui.withDayOfMonth(1);
         LocalDate fin = au != null ? au : aujourdhui;
 
-        if (debut.isAfter(fin)) {
-            throw new ConflitException("La date de début est postérieure à la date de fin");
-        }
-
-        LocalDateTime deDebut = debut.atStartOfDay();
-        // Borne haute inclusive : une vente de 23 h 50 appartient à sa journée.
-        LocalDateTime aFin = fin.atTime(23, 59, 59);
+        // Calcule les bornes et refuse une période à l'envers, comme les
+        // historiques : même règle, même message.
+        PlageDeDates plage = PlageDeDates.de(debut, fin);
+        LocalDateTime deDebut = plage.debut();
+        LocalDateTime aFin = plage.fin();
 
         return new StatistiquesResponse(
                 debut,
