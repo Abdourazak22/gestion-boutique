@@ -6,11 +6,30 @@ import { Dialogue } from "@/components/ui/dialogue";
 import { BoutonSecondaire } from "@/components/ui/entete-page";
 import { champsErreur } from "@/lib/api";
 import { notifier } from "@/lib/notifier";
-import { creerProduit, type ProduitRequete } from "@/lib/produits";
-import { libelleUnite, UNITES, type UniteMesure } from "@/lib/types";
+import {
+  creerProduit,
+  modifierProduit,
+  type ProduitRequete,
+} from "@/lib/produits";
+import {
+  libelleUnite,
+  UNITES,
+  type Produit,
+  type UniteMesure,
+} from "@/lib/types";
 
 /**
- * Création d'un produit (`POST /api/produits`, réservé au gérant).
+ * Création (`POST /api/produits`) et modification (`PUT /api/produits/{id}`)
+ * d'un produit, réservées au gérant.
+ *
+ * Un seul composant pour les deux : six des sept champs sont communs, avec les
+ * mêmes contraintes et les mêmes indices. Deux formulaires jumeaux auraient
+ * divergé au premier changement de règle.
+ *
+ * La seule différence de fond est le stock. Il se saisit à la création, où il
+ * devient le premier mouvement du journal, et disparaît de la modification :
+ * le serveur l'y refuse en 400, parce qu'écrire un stock en valeur absolue
+ * effaçait les ventes enregistrées depuis l'ouverture du formulaire.
  *
  * Les contraintes reproduites ici viennent une à une de `ProduitRequest` et de
  * `ProduitService` : elles évitent un aller-retour pour une faute évidente,
@@ -26,24 +45,45 @@ interface EtatFormulaire {
 
 const VIDE: EtatFormulaire = { champs: {}, valeurs: {} };
 
+const COMMUNS = ["nom", "description", "prixAchat", "prixVente", "unite", "seuilAlerte"];
+
 const texte = (donnees: FormData, cle: string): string =>
   (donnees.get(cle) as string | null)?.trim() ?? "";
 
 /** Ce composant n'est monté que lorsque la boîte doit être visible. */
 export function FormulaireProduit({
+  produit,
   onFermer,
-  onCree,
+  onEnregistre,
 }: {
+  /** Absent : création. Présent : modification de ce produit. */
+  produit?: Produit;
   onFermer: () => void;
-  onCree: () => void;
+  onEnregistre: () => void;
 }) {
+  const modification = produit !== undefined;
+
+  // Valeurs de départ en modification. Elles ne servent qu'au premier rendu :
+  // après une soumission refusée, `etat.valeurs` porte ce que l'utilisateur
+  // avait tapé et doit primer.
+  const initiales: Record<string, string> = produit
+    ? {
+        nom: produit.nom,
+        description: produit.description ?? "",
+        prixAchat: String(produit.prixAchat),
+        prixVente: String(produit.prixVente),
+        unite: produit.unite,
+        seuilAlerte: String(produit.seuilAlerte),
+      }
+    : {};
+
   // Action côté client et non Server Action : le jeton d'authentification vit
   // dans le navigateur, le serveur Next ne peut pas appeler l'API à sa place.
   const [etat, soumettre, enCours] = useActionState<EtatFormulaire, FormData>(
     async (_precedent, donnees) => {
+      const cles = modification ? COMMUNS : [...COMMUNS, "quantiteStock"];
       const valeurs = Object.fromEntries(
-        ["nom", "description", "prixAchat", "prixVente", "unite", "quantiteStock", "seuilAlerte"]
-          .map((cle) => [cle, texte(donnees, cle)]),
+        cles.map((cle) => [cle, texte(donnees, cle)]),
       );
 
       const prixAchat = Number(valeurs.prixAchat);
@@ -60,24 +100,34 @@ export function FormulaireProduit({
         };
       }
 
-      const requete: ProduitRequete = {
+      const communs = {
         nom: valeurs.nom!,
         description: valeurs.description || null,
         prixAchat,
         prixVente,
         unite: valeurs.unite as UniteMesure,
-        quantiteStock: Number(valeurs.quantiteStock),
         seuilAlerte: Number(valeurs.seuilAlerte),
       };
 
       try {
-        await notifier.pendant(creerProduit(requete), {
-          attente: "Enregistrement du produit…",
-          succes: `« ${requete.nom} » ajouté au catalogue.`,
-        });
-        onCree();
+        if (produit) {
+          await notifier.pendant(modifierProduit(produit.id, communs), {
+            attente: "Enregistrement des modifications…",
+            succes: `« ${communs.nom} » mis à jour.`,
+          });
+        } else {
+          const requete: ProduitRequete = {
+            ...communs,
+            quantiteStock: Number(valeurs.quantiteStock),
+          };
+          await notifier.pendant(creerProduit(requete), {
+            attente: "Enregistrement du produit…",
+            succes: `« ${requete.nom} » ajouté au catalogue.`,
+          });
+        }
+        onEnregistre();
         onFermer();
-        return { champs: {}, valeurs: {} };
+        return VIDE;
       } catch (erreur) {
         // 400 : le détail par champ est plus utile que le message global, et le
         // toast de `pendant()` a déjà annoncé l'échec.
@@ -87,13 +137,13 @@ export function FormulaireProduit({
     VIDE,
   );
 
-  const valeur = (cle: string) => etat.valeurs[cle] ?? "";
+  const valeur = (cle: string) => etat.valeurs[cle] ?? initiales[cle] ?? "";
   const erreur = (cle: string) => etat.champs[cle];
 
   return (
     <Dialogue
       ouvert
-      titre="Ajouter un produit"
+      titre={modification ? `Modifier · ${produit.nom}` : "Ajouter un produit"}
       description="Les champs marqués d’une étoile sont obligatoires."
       onFermer={onFermer}
     >
@@ -170,7 +220,9 @@ export function FormulaireProduit({
             </Champ>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div
+            className={`grid gap-4 ${modification ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}
+          >
             <Champ id="unite" libelle="Unité" obligatoire erreur={erreur("unite")}>
               <Liste
                 {...liaisonsChamp("unite", erreur("unite"))}
@@ -187,24 +239,28 @@ export function FormulaireProduit({
               </Liste>
             </Champ>
 
-            <Champ
-              id="quantiteStock"
-              libelle="Stock initial"
-              obligatoire
-              erreur={erreur("quantiteStock")}
-            >
-              <Saisie
-                {...liaisonsChamp("quantiteStock", erreur("quantiteStock"))}
-                name="quantiteStock"
-                type="number"
-                required
-                min={0}
-                step="1"
-                inputMode="numeric"
-                defaultValue={valeur("quantiteStock") || "0"}
+            {/* Absent en modification : le stock ne se corrige que par un
+                ajustement d'inventaire, qui en garde la trace et le motif. */}
+            {modification ? null : (
+              <Champ
+                id="quantiteStock"
+                libelle="Stock initial"
+                obligatoire
                 erreur={erreur("quantiteStock")}
-              />
-            </Champ>
+              >
+                <Saisie
+                  {...liaisonsChamp("quantiteStock", erreur("quantiteStock"))}
+                  name="quantiteStock"
+                  type="number"
+                  required
+                  min={0}
+                  step="1"
+                  inputMode="numeric"
+                  defaultValue={valeur("quantiteStock") || "0"}
+                  erreur={erreur("quantiteStock")}
+                />
+              </Champ>
+            )}
 
             <Champ
               id="seuilAlerte"
@@ -226,6 +282,13 @@ export function FormulaireProduit({
               />
             </Champ>
           </div>
+
+          {modification ? (
+            <p className="rounded-lg border border-line bg-plane px-4 py-2.5 text-[13px] text-ink-2">
+              Stock actuel : {produit.quantiteStock} {libelleUnite[produit.unite]}.
+              Il ne se modifie pas ici, mais par un inventaire.
+            </p>
+          ) : null}
         </div>
 
         <div className="mt-6 flex items-center justify-end gap-2 border-t border-line pt-4">
@@ -237,7 +300,11 @@ export function FormulaireProduit({
             disabled={enCours}
             className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white transition-colors duration-200 hover:bg-brand-600 disabled:cursor-progress disabled:bg-brand-500/60"
           >
-            {enCours ? "Enregistrement…" : "Ajouter le produit"}
+            {enCours
+              ? "Enregistrement…"
+              : modification
+                ? "Enregistrer les modifications"
+                : "Ajouter le produit"}
           </button>
         </div>
       </form>

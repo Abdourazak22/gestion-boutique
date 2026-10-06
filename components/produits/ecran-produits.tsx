@@ -52,7 +52,7 @@ export function EcranProduits() {
       {estGerant && formulaireOuvert ? (
         <FormulaireProduit
           onFermer={() => setFormulaireOuvert(false)}
-          onCree={() => setVersion((v) => v + 1)}
+          onEnregistre={() => setVersion((v) => v + 1)}
         />
       ) : null}
     </>

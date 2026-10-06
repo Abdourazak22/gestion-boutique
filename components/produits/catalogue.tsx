@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Erreur, PageHorsLimites, Squelette, Vide } from "@/components/ui/etats";
-import { IconAlerte, IconCheck, IconInventaire, IconRecherche } from "@/components/icons";
+import {
+  IconAlerte,
+  IconCheck,
+  IconCrayon,
+  IconInventaire,
+  IconRecherche,
+} from "@/components/icons";
+import { FormulaireProduit } from "@/components/produits/formulaire-produit";
 import { Inventaire } from "@/components/produits/inventaire";
 import { listerProduits } from "@/lib/produits";
 import { useRequete } from "@/lib/requete";
@@ -37,6 +44,8 @@ export function Catalogue({
   const [saisie, setSaisie] = useState(rechercheInitiale);
   // Produit en cours de comptage, nul quand la boîte est fermée.
   const [inventorie, setInventorie] = useState<Produit | null>(null);
+  // Produit en cours de modification, nul quand la boîte est fermée.
+  const [modifie, setModifie] = useState<Produit | null>(null);
   const [recherche, setRecherche] = useState(rechercheInitiale);
   const [page, setPage] = useState(0);
 
@@ -120,6 +129,7 @@ export function Catalogue({
               <li key={p.id}>
                 <CarteProduit
                   produit={p}
+                  onModifier={estGerant ? () => setModifie(p) : undefined}
                   onInventaire={estGerant ? () => setInventorie(p) : undefined}
                 />
               </li>
@@ -145,6 +155,18 @@ export function Catalogue({
               onAjuste={recharger}
             />
           ) : null}
+
+          {/* Clé sur l'identifiant : les champs du formulaire ne sont pas
+              contrôlés, c'est le remontage qui garantit qu'ouvrir un autre
+              produit affiche bien ses valeurs et non celles du précédent. */}
+          {modifie ? (
+            <FormulaireProduit
+              key={modifie.id}
+              produit={modifie}
+              onFermer={() => setModifie(null)}
+              onEnregistre={recharger}
+            />
+          ) : null}
         </>
       )}
     </>
@@ -153,10 +175,12 @@ export function Catalogue({
 
 function CarteProduit({
   produit: p,
+  onModifier,
   onInventaire,
 }: {
   produit: Produit;
-  /** Absent pour un vendeur : l'ajustement de stock lui est refusé en 403. */
+  /** Absents pour un vendeur : ces deux écritures lui sont refusées en 403. */
+  onModifier?: () => void;
   onInventaire?: () => void;
 }) {
   // Le remplissage se lit par rapport à trois fois le seuil : au-delà, le
@@ -224,22 +248,59 @@ function CarteProduit({
         </div>
       </div>
 
-      {onInventaire ? (
-        <button
-          type="button"
-          onClick={onInventaire}
-          // Nom accessible porte par aria-label et non par un span
-          // complementaire : le calcul du nom concatene les noeuds sans
-          // separateur, ce qui annoncait « Inventairede Riz parfume ». Le
-          // libelle visible reste contenu dans le nom accessible.
-          aria-label={`Inventaire de ${p.nom}`}
-          className="mt-4 inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-line px-3 text-[13px] font-medium text-ink transition-colors duration-200 hover:border-brand-300 hover:text-brand-600"
-        >
-          <IconInventaire className="h-4 w-4" />
-          Inventaire
-        </button>
+      {onModifier || onInventaire ? (
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          {/* Nom accessible porté par aria-label et non par un span
+              complémentaire : le calcul du nom concatène les noeuds sans
+              séparateur, ce qui annonçait « Inventairede Riz parfumé ». Le
+              libellé visible reste contenu dans le nom accessible. */}
+          {onModifier ? (
+            <ActionCarte
+              onClick={onModifier}
+              nomAccessible={`Modifier ${p.nom}`}
+              icone={<IconCrayon className="h-4 w-4" />}
+              libelle="Modifier"
+            />
+          ) : null}
+          {onInventaire ? (
+            <ActionCarte
+              onClick={onInventaire}
+              nomAccessible={`Inventaire de ${p.nom}`}
+              icone={<IconInventaire className="h-4 w-4" />}
+              libelle="Inventaire"
+            />
+          ) : null}
+        </div>
       ) : null}
     </article>
+  );
+}
+
+/**
+ * Action en pied de carte. Hauteur minimale de 44 px : la cible doit rester
+ * atteignable au doigt sur le téléphone du comptoir.
+ */
+function ActionCarte({
+  onClick,
+  nomAccessible,
+  icone,
+  libelle,
+}: {
+  onClick: () => void;
+  nomAccessible: string;
+  icone: React.ReactNode;
+  libelle: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={nomAccessible}
+      className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-line px-3 text-[13px] font-medium text-ink transition-colors duration-200 hover:border-brand-300 hover:text-brand-600"
+    >
+      {icone}
+      {libelle}
+    </button>
   );
 }
 

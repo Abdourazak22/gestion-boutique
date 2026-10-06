@@ -3,6 +3,7 @@ import {
   Bell,
   Check,
   ClipboardList,
+  Pencil,
   LayoutDashboard,
   Lock,
   LogOut,
@@ -51,6 +52,7 @@ export const IconImprimer = (p: LucideProps) => <Printer {...reglages} {...p} />
 export const IconFermer = (p: LucideProps) => <X {...reglages} {...p} />;
 export const IconAlerte = (p: LucideProps) => <TriangleAlert {...reglages} {...p} />;
 export const IconInventaire = (p: LucideProps) => <ClipboardList {...reglages} {...p} />;
+export const IconCrayon = (p: LucideProps) => <Pencil {...reglages} {...p} />;
 export const IconCheck = (p: LucideProps) => <Check {...reglages} {...p} />;
 export const IconParametres = (p: LucideProps) => <Settings {...reglages} {...p} />;
 export const IconDeconnexion = (p: LucideProps) => <LogOut {...reglages} {...p} />;

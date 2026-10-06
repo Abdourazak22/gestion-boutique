@@ -4,8 +4,21 @@ import userEvent from "@testing-library/user-event";
 import { Catalogue } from "./catalogue";
 import type { Paginee, Produit } from "@/lib/types";
 
-vi.mock("@/lib/produits", () => ({ listerProduits: vi.fn() }));
-const { listerProduits } = await import("@/lib/produits");
+vi.mock("@/lib/produits", () => ({
+  listerProduits: vi.fn(),
+  modifierProduit: vi.fn(),
+  ajusterStock: vi.fn(),
+  listerMouvements: vi.fn(),
+}));
+vi.mock("@/lib/notifier", () => ({
+  notifier: {
+    erreur: vi.fn(),
+    succes: vi.fn(),
+    pendant: vi.fn((promesse: Promise<unknown>) => promesse),
+    apresRedirection: vi.fn(),
+  },
+}));
+const { listerProduits, listerMouvements } = await import("@/lib/produits");
 
 const PRODUIT: Produit = {
   id: 1,
@@ -29,6 +42,10 @@ const page = (
 
 beforeEach(() => {
   vi.mocked(listerProduits).mockReset();
+  vi.mocked(listerMouvements).mockResolvedValue({
+    content: [],
+    page: { size: 8, number: 0, totalElements: 0, totalPages: 1 },
+  });
 });
 
 describe("catalogue", () => {
@@ -144,5 +161,63 @@ describe("course entre la pagination et le debounce de recherche", () => {
     await new Promise((resoudre) => setTimeout(resoudre, 450));
     expect(screen.getByText("Page une")).toBeInTheDocument();
     expect(screen.queryByText("Page zéro")).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Les deux actions d'écriture de la carte. Elles sont réservées au gérant
+ * côté serveur : les proposer à un vendeur ne mènerait qu'à un 403.
+ */
+describe("actions sur une carte produit", () => {
+  it("n'offre aucune action par défaut", async () => {
+    vi.mocked(listerProduits).mockResolvedValue(page([PRODUIT]));
+
+    render(<Catalogue />);
+    await screen.findByText("Riz parfumé 25 kg");
+
+    expect(
+      screen.queryByRole("button", { name: /modifier riz parfumé 25 kg/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /inventaire de riz parfumé 25 kg/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("offre modification et inventaire au gérant", async () => {
+    vi.mocked(listerProduits).mockResolvedValue(page([PRODUIT]));
+
+    render(<Catalogue estGerant />);
+    await screen.findByText("Riz parfumé 25 kg");
+
+    expect(
+      screen.getByRole("button", { name: /modifier riz parfumé 25 kg/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /inventaire de riz parfumé 25 kg/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("ouvre la modification sur le produit cliqué", async () => {
+    const sucre: Produit = {
+      ...PRODUIT,
+      id: 2,
+      nom: "Sucre 1 kg",
+      unite: "PAQUET",
+      prixAchat: 800,
+      prixVente: 1000,
+    };
+    vi.mocked(listerProduits).mockResolvedValue(page([PRODUIT, sucre]));
+
+    render(<Catalogue estGerant />);
+    await screen.findByText("Sucre 1 kg");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /modifier sucre 1 kg/i }),
+    );
+
+    // Les valeurs doivent être celles du produit cliqué, pas du premier.
+    await screen.findByRole("dialog");
+    expect(screen.getByLabelText(/nom du produit/i)).toHaveValue("Sucre 1 kg");
+    expect(screen.getByLabelText(/prix de vente/i)).toHaveValue(1000);
   });
 });

@@ -21,6 +21,7 @@ vi.mock("@/components/auth/session", () => ({
 vi.mock("@/lib/produits", () => ({
   listerProduits: vi.fn(),
   creerProduit: vi.fn(),
+  modifierProduit: vi.fn(),
   ajusterStock: vi.fn(),
   listerMouvements: vi.fn(),
 }));
@@ -57,6 +58,16 @@ describe("accessibilité de l'écran Produits", () => {
   it("ne présente aucune infraction, catalogue chargé", async () => {
     const { container } = render(<EcranProduits />);
     await screen.findByText("Riz parfumé 25 kg");
+
+    await attendreAucuneInfraction(container);
+  });
+
+  it("ne présente aucune infraction, modification ouverte", async () => {
+    const { container } = render(<EcranProduits />);
+    await screen.findByText("Riz parfumé 25 kg");
+
+    await userEvent.click(screen.getByRole("button", { name: /modifier riz/i }));
+    await screen.findByRole("dialog");
 
     await attendreAucuneInfraction(container);
   });
