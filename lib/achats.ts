@@ -86,3 +86,42 @@ export async function enregistrerAchat(requete: AchatRequete): Promise<Achat> {
   const { data } = await api.post<Achat>("/achats", requete);
   return data;
 }
+
+/**
+ * `GET /api/achats/export` : télécharge les ventes de la période en CSV.
+ * Réservé au gérant, le fichier portant la marge de chaque vente.
+ *
+ * Le téléchargement passe par un blob et un lien éphémère : un `<a href>`
+ * direct partirait sans l'en-tête `Authorization`, le jeton vivant dans le
+ * navigateur et non dans un cookie.
+ */
+export async function exporterVentes(du?: string, au?: string): Promise<void> {
+  const reponse = await api.get<Blob>("/achats/export", {
+    params: { du: du || undefined, au: au || undefined },
+    responseType: "blob",
+  });
+
+  const url = URL.createObjectURL(reponse.data);
+  const lien = document.createElement("a");
+  lien.href = url;
+  lien.download = nomFichierPropose(reponse.headers["content-disposition"]);
+  // Le lien n'est jamais visible : il n'existe que le temps du clic
+  // programmatique, seul moyen de déclencher un enregistrement de fichier.
+  document.body.appendChild(lien);
+  lien.click();
+  lien.remove();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Nom de fichier annoncé par le serveur dans `Content-Disposition`. Le repli
+ * évite un téléchargement nommé « download » si l'en-tête manque, ce qui
+ * arrive derrière certains intermédiaires.
+ */
+function nomFichierPropose(entete: unknown): string {
+  if (typeof entete === "string") {
+    const trouve = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(entete);
+    if (trouve?.[1]) return decodeURIComponent(trouve[1]);
+  }
+  return "ventes.csv";
+}

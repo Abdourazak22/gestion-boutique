@@ -9,6 +9,7 @@ const role = { courant: "GERANT" as Role };
 
 vi.mock("@/lib/achats", () => ({
   listerAchats: vi.fn(),
+  exporterVentes: vi.fn(),
   ouvrirTicket: vi.fn(),
   annulerAchat: vi.fn(),
 }));
@@ -32,7 +33,8 @@ vi.mock("@/lib/notifier", () => ({
   },
 }));
 
-const { listerAchats, annulerAchat } = await import("@/lib/achats");
+const { listerAchats, annulerAchat, exporterVentes } =
+  await import("@/lib/achats");
 
 const VENTE = achatDeTest({
   lignes: [
@@ -196,6 +198,54 @@ describe("formulaire d'annulation", () => {
 
     await waitFor(() =>
       expect(vi.mocked(listerAchats).mock.calls.length).toBeGreaterThan(appelsAvant),
+    );
+  });
+});
+
+describe("export comptable depuis l'historique", () => {
+  /**
+   * Le fichier porte la marge de chaque vente, que le serveur réserve au
+   * gérant : proposer le bouton à un vendeur ne mènerait qu'à un 403.
+   */
+  it("n'est pas proposé à un vendeur", async () => {
+    role.courant = "VENDEUR";
+
+    render(<TableVentes />);
+    await screen.findByText("ACH-20261005-0001");
+
+    expect(
+      screen.queryByRole("button", { name: /exporter en csv/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("exporte sans bornes quand aucune date n'est saisie", async () => {
+    vi.mocked(exporterVentes).mockResolvedValue(undefined);
+
+    render(<TableVentes />);
+    await screen.findByText("ACH-20261005-0001");
+    await userEvent.click(screen.getByRole("button", { name: /exporter en csv/i }));
+
+    await waitFor(() =>
+      expect(exporterVentes).toHaveBeenCalledWith(undefined, undefined),
+    );
+  });
+
+  /**
+   * Le bouton doit faire ce que les deux champs de dates annoncent : exporter
+   * la période affichée, et non tout l'historique.
+   */
+  it("exporte la période affichée", async () => {
+    vi.mocked(exporterVentes).mockResolvedValue(undefined);
+
+    render(<TableVentes />);
+    await screen.findByText("ACH-20261005-0001");
+
+    await userEvent.type(screen.getByLabelText("Du"), "2026-10-01");
+    await userEvent.type(screen.getByLabelText("Au"), "2026-10-08");
+    await userEvent.click(screen.getByRole("button", { name: /exporter en csv/i }));
+
+    await waitFor(() =>
+      expect(exporterVentes).toHaveBeenCalledWith("2026-10-01", "2026-10-08"),
     );
   });
 });

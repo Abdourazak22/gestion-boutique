@@ -8,6 +8,7 @@ import { achatDeTest } from "@/lib/aide-test";
 
 vi.mock("@/lib/achats", () => ({
   listerAchats: vi.fn(),
+  exporterVentes: vi.fn(),
   ouvrirTicket: vi.fn(),
   annulerAchat: vi.fn(),
 }));

@@ -5,7 +5,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Erreur, PageHorsLimites, Squelette, Vide } from "@/components/ui/etats";
 import { Pagination } from "@/components/produits/catalogue";
 import { IconFermer, IconImprimer, IconRecherche } from "@/components/icons";
-import { listerAchats, ouvrirTicket } from "@/lib/achats";
+import { exporterVentes, listerAchats, ouvrirTicket } from "@/lib/achats";
 import { useRequete } from "@/lib/requete";
 import { notifier } from "@/lib/notifier";
 import {
@@ -39,6 +39,7 @@ export function TableVentes() {
   const [requete, setRequete] = useState("");
   const [selection, setSelection] = useState<number[]>([]);
   const [ouvert, setOuvert] = useState<number | null>(null);
+  const [exportEnCours, setExportEnCours] = useState(false);
 
   const { donnees, chargement, erreur, recharger } = useRequete(
     `achats?du=${du}&au=${au}&page=${page}&v=${version}`,
@@ -67,6 +68,18 @@ export function TableVentes() {
     setSelection((courant) =>
       courant.includes(id) ? courant.filter((x) => x !== id) : [...courant, id],
     );
+
+  async function exporter() {
+    setExportEnCours(true);
+    try {
+      await notifier.pendant(exporterVentes(du || undefined, au || undefined), {
+        attente: "Préparation du fichier…",
+        succes: "Export téléchargé.",
+      });
+    } finally {
+      setExportEnCours(false);
+    }
+  }
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
@@ -113,6 +126,21 @@ export function TableVentes() {
               className="h-10 cursor-pointer rounded-lg px-3 text-xs font-medium text-brand-600 transition-colors duration-200 hover:bg-brand-50"
             >
               Effacer les dates
+            </button>
+          ) : null}
+
+          {/* Réservé au gérant, comme l'endpoint : le fichier porte les marges.
+              Il exporte la période affichée, pas tout l'historique, pour que
+              le bouton fasse ce que les deux champs de dates annoncent. */}
+          {utilisateur.role === "GERANT" ? (
+            <button
+              type="button"
+              onClick={exporter}
+              disabled={exportEnCours}
+              title="Télécharge les ventes de la période au format CSV"
+              className="h-10 cursor-pointer rounded-lg border border-line px-3 text-xs font-medium text-ink-2 transition-colors duration-200 hover:bg-plane hover:text-ink disabled:cursor-progress"
+            >
+              {exportEnCours ? "Préparation…" : "Exporter en CSV"}
             </button>
           ) : null}
 
