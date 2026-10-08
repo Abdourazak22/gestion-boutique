@@ -1,6 +1,7 @@
 package com.boutique.backend.controller;
 
 import com.boutique.backend.dto.ChangementStatutRequest;
+import com.boutique.backend.dto.ReinitialisationMotDePasseRequest;
 import com.boutique.backend.dto.UtilisateurRequest;
 import com.boutique.backend.dto.UtilisateurResponse;
 import com.boutique.backend.dto.UtilisateurUpdateRequest;
@@ -13,6 +14,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,6 +77,21 @@ public class UtilisateurController {
      * Le cas d'usage : un téléphone perdu, alors que la personne doit continuer
      * à travailler dès demain.
      */
+    /**
+     * Pose un nouveau mot de passe sur le compte d'un employé qui a perdu le
+     * sien, et le déconnecte partout.
+     *
+     * <p>Le gérant ne peut pas se viser lui-même : son propre mot de passe se
+     * change dans ses paramètres, où l'actuel est exigé.
+     */
+    @PatchMapping("/{id}/mot-de-passe")
+    public UtilisateurResponse reinitialiserMotDePasse(
+            @PathVariable Long id,
+            @Valid @RequestBody ReinitialisationMotDePasseRequest requete,
+            @AuthenticationPrincipal Jwt jwt) {
+        return utilisateurService.reinitialiserMotDePasse(id, jwt.getSubject(), requete);
+    }
+
     @PostMapping("/{id}/deconnexion")
     public UtilisateurResponse deconnecterPartout(@PathVariable Long id) {
         return utilisateurService.revoquerLesJetons(id);

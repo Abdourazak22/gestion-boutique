@@ -222,6 +222,115 @@ class UtilisateurControllerTest {
                 .andExpect(status().isConflict());
     }
 
+    /**
+     * Le mot de passe perdu condamnait le compte : seul son propriétaire
+     * pouvait le changer, et seulement en connaissant l'ancien. Le parcours est
+     * vérifié de bout en bout, l'ancien refusé et le nouveau accepté.
+     */
+    @Test
+    void le_gerant_reinitialise_un_mot_de_passe_perdu() throws Exception {
+        long id = creerVendeuse();
+
+        mockMvc.perform(patch("/api/utilisateurs/" + id + "/mot-de-passe")
+                        .header("Authorization", "Bearer " + jetonGerant)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nouveauMotDePasse":"nouveaumotdepasse"}"""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.identifiant").value("awa.kone"))
+                .andExpect(jsonPath("$.motDePasse").doesNotExist());
+
+        // L'ancien ne vaut plus rien.
+        mockMvc.perform(post("/api/auth/connexion").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"identifiant":"awa.kone","motDePasse":"motdepasse1"}"""))
+                .andExpect(status().isUnauthorized());
+
+        // Le nouveau ouvre bien le compte.
+        mockMvc.perform(post("/api/auth/connexion").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"identifiant":"awa.kone","motDePasse":"nouveaumotdepasse"}"""))
+                .andExpect(status().isOk());
+    }
+
+    /**
+     * Une réinitialisation suit souvent un appareil perdu. Laisser les sessions
+     * ouvertes la viderait de son sens.
+     */
+    @Test
+    void la_reinitialisation_revoque_les_jetons_du_compte() throws Exception {
+        long id = creerVendeuse();
+        String jetonVendeuse = jeton("awa.kone", "motdepasse1");
+
+        mockMvc.perform(get("/api/auth/moi").header("Authorization", "Bearer " + jetonVendeuse))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(patch("/api/utilisateurs/" + id + "/mot-de-passe")
+                        .header("Authorization", "Bearer " + jetonGerant)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nouveauMotDePasse":"nouveaumotdepasse"}"""))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/auth/moi").header("Authorization", "Bearer " + jetonVendeuse))
+                .andExpect(status().isUnauthorized());
+    }
+
+    /**
+     * Refusé sur son propre compte : une session de gérant détournée pourrait
+     * sinon changer le mot de passe sans connaître l'ancien, et verrouiller le
+     * vrai gérant dehors.
+     */
+    @Test
+    void le_gerant_ne_peut_pas_reinitialiser_le_sien() throws Exception {
+        String reponse = mockMvc.perform(get("/api/auth/moi")
+                        .header("Authorization", "Bearer " + jetonGerant))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long idGerant = objectMapper.readTree(reponse).get("id").asLong();
+
+        mockMvc.perform(patch("/api/utilisateurs/" + idGerant + "/mot-de-passe")
+                        .header("Authorization", "Bearer " + jetonGerant)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nouveauMotDePasse":"nouveaumotdepasse"}"""))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(
+                        org.hamcrest.Matchers.containsString("vos paramètres")));
+
+        // Et son mot de passe n'a pas changé.
+        mockMvc.perform(post("/api/auth/connexion").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"identifiant":"gerant","motDePasse":"gerant123"}"""))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void un_vendeur_ne_peut_pas_reinitialiser_un_mot_de_passe() throws Exception {
+        long id = creerVendeuse();
+        String jetonVendeuse = jeton("awa.kone", "motdepasse1");
+
+        mockMvc.perform(patch("/api/utilisateurs/" + id + "/mot-de-passe")
+                        .header("Authorization", "Bearer " + jetonVendeuse)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nouveauMotDePasse":"nouveaumotdepasse"}"""))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void un_mot_de_passe_trop_court_est_refuse() throws Exception {
+        long id = creerVendeuse();
+
+        mockMvc.perform(patch("/api/utilisateurs/" + id + "/mot-de-passe")
+                        .header("Authorization", "Bearer " + jetonGerant)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nouveauMotDePasse":"court"}"""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.champs.nouveauMotDePasse").exists());
+    }
+
     private long creerVendeuse() throws Exception {
         String reponse = mockMvc.perform(post("/api/utilisateurs")
                         .header("Authorization", "Bearer " + jetonGerant)

@@ -1,6 +1,7 @@
 package com.boutique.backend.service;
 
 import com.boutique.backend.dto.ChangementMotDePasseRequest;
+import com.boutique.backend.dto.ReinitialisationMotDePasseRequest;
 import com.boutique.backend.dto.UtilisateurRequest;
 import com.boutique.backend.dto.UtilisateurResponse;
 import com.boutique.backend.dto.UtilisateurUpdateRequest;
@@ -153,6 +154,39 @@ public class UtilisateurService {
         utilisateur.setMotDePasse(encodeur.encode(requete.nouveauMotDePasse()));
         // Les jetons émis avec l'ancien mot de passe ne valent plus rien.
         utilisateur.revoquerLesJetons();
+    }
+
+    /**
+     * Réinitialisation par le gérant du mot de passe d'un employé qui a perdu
+     * le sien. Sans elle, un oubli condamnait le compte : seul son propriétaire
+     * pouvait le changer, et seulement en connaissant l'ancien.
+     *
+     * <p>Révoque les jetons du compte : si la réinitialisation suit un vol
+     * d'appareil, laisser les sessions ouvertes viderait l'opération de son
+     * sens.
+     *
+     * <p>Interdite sur son propre compte, et ce n'est pas une gêne inutile :
+     * une session de gérant détournée pourrait sinon changer le mot de passe
+     * sans connaître l'ancien, et verrouiller le vrai gérant dehors. Pour le
+     * sien, {@link #changerMotDePasse} exige le mot de passe actuel.
+     *
+     * @param identifiantAuteur le gérant qui demande, lu dans son jeton
+     * @throws ConflitException si le gérant vise son propre compte
+     */
+    @Transactional
+    public UtilisateurResponse reinitialiserMotDePasse(Long id, String identifiantAuteur,
+                                                       ReinitialisationMotDePasseRequest requete) {
+        Utilisateur utilisateur = parIdOuErreur(id);
+
+        if (utilisateur.getIdentifiant().equals(identifiantAuteur)) {
+            throw new ConflitException("Pour changer votre propre mot de passe, "
+                    + "passez par vos paramètres : l'actuel y est demandé");
+        }
+
+        utilisateur.setMotDePasse(encodeur.encode(requete.nouveauMotDePasse()));
+        utilisateur.revoquerLesJetons();
+
+        return UtilisateurResponse.de(utilisateur);
     }
 
     public boolean identifiantExiste(String identifiant) {
