@@ -27,7 +27,6 @@ public interface AchatRepository extends JpaRepository<Achat, Long> {
     @EntityGraph(attributePaths = {"lignes", "vendeur"})
     Page<Achat> findAllBy(Pageable pageable);
 
-    long countByDateAchatBetween(LocalDateTime debut, LocalDateTime fin);
 
     /**
      * Totaux des ventes de la période, agrégés par la base.

@@ -23,7 +23,6 @@ public interface LivraisonRepository extends JpaRepository<Livraison, Long> {
     @EntityGraph(attributePaths = {"lignes", "receptionniste"})
     Page<Livraison> findAllBy(Pageable pageable);
 
-    long countByDateLivraisonBetween(LocalDateTime debut, LocalDateTime fin);
 
     /** Nombre de réceptions et montant payé aux grossistes sur la période. */
     @Query("""

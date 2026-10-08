@@ -16,7 +16,6 @@ import com.boutique.backend.model.Utilisateur;
 import com.boutique.backend.repository.AchatRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,18 +25,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AchatService {
 
-    private static final DateTimeFormatter JOUR = DateTimeFormatter.ofPattern("yyyyMMdd");
-
     private final AchatRepository achatRepository;
     private final ProduitService produitService;
     private final UtilisateurService utilisateurService;
+    private final NumerotationJournaliere numerotation;
 
     public AchatService(AchatRepository achatRepository,
                         ProduitService produitService,
-                        UtilisateurService utilisateurService) {
+                        UtilisateurService utilisateurService,
+                        NumerotationJournaliere numerotation) {
         this.achatRepository = achatRepository;
         this.produitService = produitService;
         this.utilisateurService = utilisateurService;
+        this.numerotation = numerotation;
     }
 
     /**
@@ -57,7 +57,13 @@ public class AchatService {
         achat.setModePaiement(requete.modePaiement());
         achat.setNomClient(requete.nomClient());
         achat.setTelephoneClient(requete.telephoneClient());
-        achat.setNumero(prochainNumero());
+        // Numéro attribué avant la boucle sur les lignes, et cet ordre porte plus
+        // qu'il n'y paraît. L'incrément du compteur verrouille la ligne du jour
+        // jusqu'au commit : les ventes concurrentes s'y sérialisent, et chacune
+        // relit donc les produits après que la précédente a validé. Déplacer
+        // cet appel après la boucle ramènerait les conflits de verrou optimiste
+        // sur les produits vendus en même temps.
+        achat.setNumero(numerotation.prochainNumero("ACH", LocalDate.now()));
 
         for (LigneAchatRequest ligne : requete.lignes()) {
             Produit produit = produitService.sortirPourVente(
@@ -137,10 +143,4 @@ public class AchatService {
      * encaissements simultanés, la contrainte d'unicité sur {@code numero}
      * rejetterait le doublon en 409.
      */
-    private String prochainNumero() {
-        LocalDate aujourdhui = LocalDate.now();
-        PlageDeDates jour = PlageDeDates.journee(aujourdhui);
-        long rang = achatRepository.countByDateAchatBetween(jour.debut(), jour.fin()) + 1;
-        return "ACH-%s-%04d".formatted(aujourdhui.format(JOUR), rang);
-    }
 }
