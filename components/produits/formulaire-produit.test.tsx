@@ -8,6 +8,7 @@ import type { Produit } from "@/lib/types";
 vi.mock("@/lib/produits", () => ({
   creerProduit: vi.fn(),
   modifierProduit: vi.fn(),
+  supprimerProduit: vi.fn(),
 }));
 vi.mock("@/lib/notifier", () => ({
   notifier: {
@@ -18,7 +19,8 @@ vi.mock("@/lib/notifier", () => ({
   },
 }));
 
-const { creerProduit, modifierProduit } = await import("@/lib/produits");
+const { creerProduit, modifierProduit, supprimerProduit } =
+  await import("@/lib/produits");
 
 const PRODUIT: Produit = {
   id: 7,
@@ -52,6 +54,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(modifierProduit).mockResolvedValue(PRODUIT);
   vi.mocked(creerProduit).mockResolvedValue(PRODUIT);
+  vi.mocked(supprimerProduit).mockResolvedValue(undefined);
 });
 
 describe("modification d'un produit", () => {
@@ -181,5 +184,76 @@ describe("création d'un produit", () => {
         seuilAlerte: 0,
       }),
     );
+  });
+});
+
+describe("retrait d'un produit du catalogue", () => {
+  const monter = (surcharges: Partial<Produit> = {}, onEnregistre = vi.fn()) => {
+    const onFermer = vi.fn();
+    render(
+      <FormulaireProduit
+        produit={{ ...PRODUIT, ...surcharges }}
+        onFermer={onFermer}
+        onEnregistre={onEnregistre}
+      />,
+    );
+    return { onFermer, onEnregistre };
+  };
+
+  const demander = () =>
+    userEvent.click(screen.getByRole("button", { name: /supprimer du catalogue/i }));
+
+  it("n'est pas proposé pendant la création", () => {
+    render(<FormulaireProduit onFermer={vi.fn()} onEnregistre={vi.fn()} />);
+
+    expect(
+      screen.queryByRole("button", { name: /supprimer du catalogue/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  /**
+   * Une suppression ne doit pas partir au premier clic, et la confirmation
+   * doit dire ce qu'elle emporte plutôt que demander « êtes-vous sûr ».
+   */
+  it("demande confirmation en annonçant les conséquences", async () => {
+    monter();
+    await demander();
+
+    expect(await screen.findByText(/retirer .*Riz paarfumé.* du catalogue/i)).toBeInTheDocument();
+    expect(screen.getByText(/reste rattaché aux ventes et livraisons/i)).toBeInTheDocument();
+    expect(screen.getByText(/18 sachet en stock sortiront de la valorisation/i)).toBeInTheDocument();
+    expect(screen.getByText(/le remettra au catalogue/i)).toBeInTheDocument();
+    expect(supprimerProduit).not.toHaveBeenCalled();
+  });
+
+  it("ne parle pas de valorisation quand le stock est vide", async () => {
+    monter({ quantiteStock: 0 });
+    await demander();
+
+    await screen.findByText(/retirer .*Riz paarfumé.* du catalogue/i);
+    expect(screen.queryByText(/sortiront de la valorisation/i)).not.toBeInTheDocument();
+  });
+
+  it("revient en arrière si l'on renonce", async () => {
+    monter();
+    await demander();
+    await userEvent.click(screen.getByRole("button", { name: /renoncer/i }));
+
+    expect(
+      await screen.findByRole("button", { name: /enregistrer les modifications/i }),
+    ).toBeInTheDocument();
+    expect(supprimerProduit).not.toHaveBeenCalled();
+  });
+
+  it("retire le produit une fois confirmé", async () => {
+    const { onFermer, onEnregistre } = monter();
+    await demander();
+    await userEvent.click(
+      screen.getByRole("button", { name: /oui, retirer du catalogue/i }),
+    );
+
+    await waitFor(() => expect(supprimerProduit).toHaveBeenCalledWith(7));
+    expect(onEnregistre).toHaveBeenCalled();
+    expect(onFermer).toHaveBeenCalled();
   });
 });

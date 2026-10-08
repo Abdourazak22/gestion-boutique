@@ -118,3 +118,15 @@ export async function listerMouvements(
   return data;
 }
 
+/**
+ * `DELETE /api/produits/{id}` : réservé au rôle GERANT.
+ *
+ * Suppression logique. Le produit quitte le catalogue mais reste rattaché aux
+ * ventes et livraisons déjà enregistrées, et son journal de stock subsiste.
+ * Il disparaît en revanche de la valorisation du stock, que le serveur calcule
+ * sur les seuls produits actifs. Recréer un produit du même nom le remet au
+ * catalogue plutôt que d'en créer un second.
+ */
+export async function supprimerProduit(id: number): Promise<void> {
+  await api.delete(`/produits/${id}`);
+}

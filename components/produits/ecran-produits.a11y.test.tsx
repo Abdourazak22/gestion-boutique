@@ -22,6 +22,7 @@ vi.mock("@/lib/produits", () => ({
   listerProduits: vi.fn(),
   creerProduit: vi.fn(),
   modifierProduit: vi.fn(),
+  supprimerProduit: vi.fn(),
   ajusterStock: vi.fn(),
   listerMouvements: vi.fn(),
 }));
@@ -68,6 +69,20 @@ describe("accessibilité de l'écran Produits", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /modifier riz/i }));
     await screen.findByRole("dialog");
+
+    await attendreAucuneInfraction(container);
+  });
+
+  it("ne présente aucune infraction, confirmation de retrait ouverte", async () => {
+    const { container } = render(<EcranProduits />);
+    await screen.findByText("Riz parfumé 25 kg");
+
+    await userEvent.click(screen.getByRole("button", { name: /modifier riz/i }));
+    await screen.findByRole("dialog");
+    await userEvent.click(
+      screen.getByRole("button", { name: /supprimer du catalogue/i }),
+    );
+    await screen.findByText(/retirer .*du catalogue \?/i);
 
     await attendreAucuneInfraction(container);
   });

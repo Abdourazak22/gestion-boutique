@@ -30,6 +30,7 @@ export function PiedFormulaire({
   enCoursLibelle = "Enregistrement…",
   annuler = "Annuler",
   critique = false,
+  aGauche,
 }: {
   onFermer: () => void;
   enCours: boolean;
@@ -40,19 +41,27 @@ export function PiedFormulaire({
   annuler?: string;
   /** Action destructrice : bouton rouge. */
   critique?: boolean;
+  /**
+   * Action rangée à l'opposé des deux autres, pour une suppression : la
+   * distance évite de la cliquer en visant « Enregistrer ».
+   */
+  aGauche?: React.ReactNode;
 }) {
   return (
-    <div className="mt-6 flex items-center justify-end gap-2 border-t border-line pt-4">
-      <BoutonSecondaire onClick={onFermer} disabled={enCours}>
-        {annuler}
-      </BoutonSecondaire>
-      <button
-        type="submit"
-        disabled={enCours}
-        className={critique ? SOUMETTRE_CRITIQUE : SOUMETTRE}
-      >
-        {enCours ? enCoursLibelle : soumettre}
-      </button>
+    <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
+      <div>{aGauche}</div>
+      <div className="flex items-center gap-2">
+        <BoutonSecondaire onClick={onFermer} disabled={enCours}>
+          {annuler}
+        </BoutonSecondaire>
+        <button
+          type="submit"
+          disabled={enCours}
+          className={critique ? SOUMETTRE_CRITIQUE : SOUMETTRE}
+        >
+          {enCours ? enCoursLibelle : soumettre}
+        </button>
+      </div>
     </div>
   );
 }

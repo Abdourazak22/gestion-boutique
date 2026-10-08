@@ -1,14 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Champ, liaisonsChamp, Liste, Saisie, Zone } from "@/components/ui/champ";
 import { Dialogue } from "@/components/ui/dialogue";
+import { BoutonSecondaire } from "@/components/ui/entete-page";
 import { PiedFormulaire } from "@/components/ui/pied-formulaire";
 import { champsErreur } from "@/lib/api";
 import { notifier } from "@/lib/notifier";
 import {
   creerProduit,
   modifierProduit,
+  supprimerProduit,
   type ProduitRequete,
 } from "@/lib/produits";
 import {
@@ -62,6 +64,11 @@ export function FormulaireProduit({
   onEnregistre: () => void;
 }) {
   const modification = produit !== undefined;
+  // Confirmation en deux temps plutôt qu'une seconde boîte imbriquée : les
+  // modales emboîtées se partagent mal le focus, et l'avertissement a besoin
+  // de place pour être lu.
+  const [suppressionDemandee, setSuppressionDemandee] = useState(false);
+  const [suppressionEnCours, setSuppressionEnCours] = useState(false);
 
   // Valeurs de départ en modification. Elles ne servent qu'au premier rendu :
   // après une soumission refusée, `etat.valeurs` porte ce que l'utilisateur
@@ -136,6 +143,24 @@ export function FormulaireProduit({
     },
     VIDE,
   );
+
+  async function supprimer() {
+    if (!produit) return;
+    setSuppressionEnCours(true);
+    try {
+      await notifier.pendant(supprimerProduit(produit.id), {
+        attente: "Retrait du catalogue…",
+        succes: `« ${produit.nom} » retiré du catalogue.`,
+      });
+      onEnregistre();
+      onFermer();
+    } catch {
+      // Le toast de `pendant()` a déjà annoncé l'échec : on rend la main pour
+      // laisser réessayer ou renoncer.
+      setSuppressionEnCours(false);
+      setSuppressionDemandee(false);
+    }
+  }
 
   const valeur = (cle: string) => etat.valeurs[cle] ?? initiales[cle] ?? "";
   const erreur = (cle: string) => etat.champs[cle];
@@ -291,13 +316,68 @@ export function FormulaireProduit({
           ) : null}
         </div>
 
-        <PiedFormulaire
-          onFermer={onFermer}
-          enCours={enCours}
-          soumettre={
-            modification ? "Enregistrer les modifications" : "Ajouter le produit"
-          }
-        />
+        {suppressionDemandee && produit ? (
+          <div className="mt-6 border-t border-line pt-4">
+            <div className="rounded-lg border border-critical/40 bg-critical/5 px-4 py-3">
+              <p className="text-[13px] font-semibold text-ink">
+                Retirer « {produit.nom} » du catalogue ?
+              </p>
+              <ul className="mt-2 grid gap-1 text-[13px] text-ink-2">
+                <li>
+                  Il reste rattaché aux ventes et livraisons déjà enregistrées,
+                  et son journal de stock est conservé.
+                </li>
+                {/* Conséquence chiffrée plutôt qu'un avertissement vague : la
+                    valorisation du stock ne compte que les produits actifs. */}
+                {produit.quantiteStock > 0 ? (
+                  <li>
+                    Ses {produit.quantiteStock} {libelleUnite[produit.unite]} en
+                    stock sortiront de la valorisation du tableau de bord.
+                  </li>
+                ) : null}
+                <li>
+                  Recréer un produit du même nom le remettra au catalogue.
+                </li>
+              </ul>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+              <BoutonSecondaire
+                onClick={() => setSuppressionDemandee(false)}
+                disabled={suppressionEnCours}
+              >
+                Renoncer
+              </BoutonSecondaire>
+              <button
+                type="button"
+                onClick={supprimer}
+                disabled={suppressionEnCours}
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-critical px-4 text-sm font-semibold text-white transition-opacity duration-200 hover:opacity-90 disabled:cursor-progress disabled:opacity-60"
+              >
+                {suppressionEnCours ? "Retrait…" : "Oui, retirer du catalogue"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <PiedFormulaire
+            onFermer={onFermer}
+            enCours={enCours}
+            soumettre={
+              modification ? "Enregistrer les modifications" : "Ajouter le produit"
+            }
+            aGauche={
+              modification ? (
+                <button
+                  type="button"
+                  onClick={() => setSuppressionDemandee(true)}
+                  className="min-h-11 cursor-pointer rounded-lg px-3 text-[13px] font-medium text-critical transition-colors duration-200 hover:bg-critical/10"
+                >
+                  Supprimer du catalogue
+                </button>
+              ) : undefined
+            }
+          />
+        )}
       </form>
     </Dialogue>
   );
