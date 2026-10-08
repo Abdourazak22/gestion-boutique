@@ -77,3 +77,22 @@ export async function changerStatutUtilisateur(
   });
   return data;
 }
+
+/**
+ * `PATCH /api/utilisateurs/{id}/mot-de-passe` : pose un nouveau mot de passe
+ * sur le compte d'un employé qui a perdu le sien. Réservé au gérant.
+ *
+ * N'exige pas l'ancien : c'est tout l'objet de l'opération. Le serveur révoque
+ * les jetons du compte, et refuse que le gérant se vise lui-même — pour le
+ * sien, `changerMotDePasse` demande l'actuel.
+ */
+export async function reinitialiserMotDePasse(
+  id: number,
+  nouveauMotDePasse: string,
+): Promise<Utilisateur> {
+  const { data } = await api.patch<Utilisateur>(
+    `/utilisateurs/${id}/mot-de-passe`,
+    { nouveauMotDePasse },
+  );
+  return data;
+}

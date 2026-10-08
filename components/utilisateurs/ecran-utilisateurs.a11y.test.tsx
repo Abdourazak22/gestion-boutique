@@ -25,6 +25,7 @@ vi.mock("@/lib/utilisateurs", () => ({
   deconnecterUtilisateur: vi.fn(),
   creerUtilisateur: vi.fn(),
   modifierUtilisateur: vi.fn(),
+  reinitialiserMotDePasse: vi.fn(),
 }));
 vi.mock("@/lib/notifier", () => ({
   notifier: { erreur: vi.fn(), succes: vi.fn(), pendant: vi.fn(), apresRedirection: vi.fn() },
@@ -45,6 +46,61 @@ describe("accessibilité de l'écran Utilisateurs", () => {
     await screen.findByText(/Gerant Ouattara/);
 
     await attendreAucuneInfraction(container);
+  });
+
+  it("ne présente aucune infraction, modale de mot de passe ouverte", async () => {
+    const { container } = render(<EcranUtilisateurs />);
+    await screen.findByText(/Fatou Diallo/);
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: /réinitialiser le mot de passe de Fatou Diallo/i,
+      }),
+    );
+    await screen.findByRole("dialog");
+
+    await attendreAucuneInfraction(container);
+  });
+
+  /**
+   * Chaque ligne du tableau porte les mêmes libellés d'action. Sans nom
+   * accessible, un lecteur d'écran n'annonce qu'une suite de « Modifier »
+   * indiscernables hors de leur contexte visuel.
+   */
+  it("nomme chaque action par la personne qu'elle vise", async () => {
+    render(<EcranUtilisateurs />);
+    await screen.findByText(/Fatou Diallo/);
+
+    expect(
+      screen.getByRole("button", { name: /modifier Fatou Diallo/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /réactiver le compte de Fatou Diallo/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /déconnecter Gerant Ouattara/i }),
+    ).toBeInTheDocument();
+  });
+
+  /**
+   * Le serveur refuse qu'un gérant réinitialise son propre mot de passe : le
+   * sien se change dans ses paramètres, où l'actuel est exigé. L'interface ne
+   * doit donc pas proposer l'action qui finirait en 409.
+   */
+  it("n'offre pas la réinitialisation sur son propre compte", async () => {
+    render(<EcranUtilisateurs />);
+    await screen.findByText(/Gerant Ouattara/);
+
+    expect(
+      screen.queryByRole("button", {
+        name: /réinitialiser le mot de passe de Gerant Ouattara/i,
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: /réinitialiser le mot de passe de Fatou Diallo/i,
+      }),
+    ).toBeInTheDocument();
   });
 
   it("ne présente aucune infraction, modale de création ouverte", async () => {

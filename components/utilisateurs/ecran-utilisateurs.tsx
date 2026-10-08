@@ -10,6 +10,7 @@ import { Pagination } from "@/components/produits/catalogue";
 import { IconCheck, IconFermer, IconPlus } from "@/components/icons";
 import { useSession } from "@/components/auth/session";
 import { FormulaireUtilisateur } from "@/components/utilisateurs/formulaire-utilisateur";
+import { ReinitialisationMotDePasse } from "@/components/utilisateurs/reinitialisation-mot-de-passe";
 import { notifier } from "@/lib/notifier";
 import { useRequete } from "@/lib/requete";
 import {
@@ -35,6 +36,8 @@ export function EcranUtilisateurs() {
   const [version, setVersion] = useState(0);
   const [creation, setCreation] = useState(false);
   const [enModification, setEnModification] = useState<Utilisateur | null>(null);
+  const [motDePasseAReinitialiser, setMotDePasseAReinitialiser] =
+    useState<Utilisateur | null>(null);
   const [statutEnCours, setStatutEnCours] = useState<number | null>(null);
   const [deconnexionEnCours, setDeconnexionEnCours] = useState<number | null>(null);
 
@@ -197,18 +200,38 @@ export function EcranUtilisateurs() {
                         </td>
                         <td className="py-3">
                           <div className="flex items-center justify-end gap-1">
+                            {/* Noms accessibles portés par aria-label : sans
+                                eux le tableau n'offre qu'une suite de boutons
+                                « Modifier » indiscernables les uns des autres
+                                hors de leur contexte visuel. */}
                             <button
                               type="button"
                               onClick={() => setEnModification(u)}
+                              aria-label={`Modifier ${nomComplet(u)}`}
                               className="min-h-9 cursor-pointer rounded-lg px-2.5 text-xs font-medium text-brand-600 transition-colors duration-200 hover:bg-brand-50"
                             >
                               Modifier
                             </button>
+                            {/* Pas sur son propre compte : le serveur le
+                                refuse en 409, le gérant devant passer par ses
+                                paramètres, où l'actuel est exigé. */}
+                            {u.id === connecte.id ? null : (
+                              <button
+                                type="button"
+                                onClick={() => setMotDePasseAReinitialiser(u)}
+                                aria-label={`Réinitialiser le mot de passe de ${nomComplet(u)}`}
+                                title="Pose un nouveau mot de passe et ferme les sessions du compte"
+                                className="min-h-9 cursor-pointer rounded-lg px-2.5 text-xs font-medium text-ink-2 transition-colors duration-200 hover:bg-plane hover:text-ink"
+                              >
+                                Mot de passe
+                              </button>
+                            )}
                             {u.actif ? (
                               <button
                                 type="button"
                                 onClick={() => deconnecterPartout(u)}
                                 disabled={deconnexionEnCours === u.id}
+                                aria-label={`Déconnecter ${nomComplet(u)} de tous ses appareils`}
                                 title="Révoque les jetons du compte sans l’empêcher de se reconnecter"
                                 className="min-h-9 cursor-pointer rounded-lg px-2.5 text-xs font-medium text-ink-2 transition-colors duration-200 hover:bg-plane hover:text-ink disabled:cursor-progress"
                               >
@@ -219,6 +242,7 @@ export function EcranUtilisateurs() {
                               type="button"
                               onClick={() => basculerStatut(u)}
                               disabled={statutEnCours === u.id}
+                              aria-label={`${u.actif ? "Désactiver" : "Réactiver"} le compte de ${nomComplet(u)}`}
                               className="min-h-9 cursor-pointer rounded-lg px-2.5 text-xs font-medium text-ink-2 transition-colors duration-200 hover:bg-plane hover:text-ink disabled:cursor-progress"
                             >
                               {u.actif ? "Désactiver" : "Réactiver"}
@@ -271,6 +295,14 @@ export function EcranUtilisateurs() {
           utilisateur={enModification}
           onFermer={() => setEnModification(null)}
           onEnregistre={() => setVersion((v) => v + 1)}
+        />
+      ) : null}
+
+      {motDePasseAReinitialiser ? (
+        <ReinitialisationMotDePasse
+          utilisateur={motDePasseAReinitialiser}
+          onFermer={() => setMotDePasseAReinitialiser(null)}
+          onReinitialise={() => setVersion((v) => v + 1)}
         />
       ) : null}
     </>

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { FormulaireConnexion } from "@/components/auth/formulaire-connexion";
 import { IconBoutique } from "@/components/icons";
 
@@ -59,17 +58,17 @@ export default function PageConnexion() {
           <span className="h-px flex-1 bg-gradient-to-l from-transparent to-white/25" />
         </div>
 
-        <p className="mt-6 text-center">
-          <Link
-            href="/login"
-            className="text-[13px] text-white/85 underline underline-offset-4 transition-colors duration-200 [text-shadow:0_1px_3px_rgba(0,0,0,0.5)] hover:text-white"
-          >
-            Mot de passe oublié ?
-          </Link>
+        {/* Plus de lien « Mot de passe oublié ? » : il pointait sur cet écran
+            même, et promettait donc une récupération qui n'existait pas. Il n'y
+            a pas d'envoi par courriel ici, un employé de boutique n'ayant pas
+            forcément d'adresse : la réinitialisation passe par le gérant,
+            depuis l'écran Utilisateurs. */}
+        <p className="mt-6 text-center text-[13px] text-white/85 [text-shadow:0_1px_3px_rgba(0,0,0,0.5)]">
+          Mot de passe oublié ? Demandez au gérant de le réinitialiser.
         </p>
 
         <p className="mt-10 text-center text-[11px] text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.75)]">
-          Identifiant perdu ? Contactez la gérante de la boutique.
+          Identifiant perdu ? Contactez la gérance de la boutique.
         </p>
       </main>
     </div>
