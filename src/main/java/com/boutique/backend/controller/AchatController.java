@@ -3,11 +3,14 @@ package com.boutique.backend.controller;
 import com.boutique.backend.dto.AchatRequest;
 import com.boutique.backend.dto.AchatResponse;
 import com.boutique.backend.dto.AnnulationRequest;
+import com.boutique.backend.dto.FichierExport;
 import com.boutique.backend.dto.TicketPdf;
 import com.boutique.backend.service.AchatService;
+import com.boutique.backend.service.ExportComptableService;
 import com.boutique.backend.service.TicketService;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -36,10 +39,13 @@ public class AchatController {
 
     private final AchatService achatService;
     private final TicketService ticketService;
+    private final ExportComptableService exportComptableService;
 
-    public AchatController(AchatService achatService, TicketService ticketService) {
+    public AchatController(AchatService achatService, TicketService ticketService,
+                           ExportComptableService exportComptableService) {
         this.achatService = achatService;
         this.ticketService = ticketService;
+        this.exportComptableService = exportComptableService;
     }
 
     /** Enregistre une vente. Le vendeur est déduit du jeton, pas du corps de la requête. */
@@ -81,6 +87,30 @@ public class AchatController {
                                  @Valid @RequestBody AnnulationRequest requete,
                                  @AuthenticationPrincipal Jwt jwt) {
         return achatService.annuler(id, requete, jwt.getSubject());
+    }
+
+    /**
+     * Export CSV des ventes de la période, pour la comptabilité.
+     *
+     * <p>Réservé au gérant : le fichier porte la marge de chaque vente, que
+     * {@code StatistiquesController} réserve déjà au même rôle.
+     *
+     * <p>Servi en {@code attachment} et non {@code inline} : on veut un fichier
+     * sur le disque, pas un affichage dans l'onglet.
+     */
+    @GetMapping(value = "/export", produces = "text/csv")
+    @PreAuthorize("hasRole('GERANT')")
+    public ResponseEntity<byte[]> exporter(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate du,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate au) {
+        FichierExport fichier = exportComptableService.ventes(du, au);
+        return ResponseEntity.ok()
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename(fichier.nomFichier()).build().toString())
+                .body(fichier.contenu());
     }
 
     /**
