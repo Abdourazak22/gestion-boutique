@@ -18,7 +18,7 @@ describe("accessibilité du formulaire de connexion", () => {
     render(<FormulaireConnexion />);
 
     expect(screen.getByLabelText(/nom d’utilisateur/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/mot de passe/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Mot de passe")).toBeInTheDocument();
     expect(
       screen.getByLabelText(/rester connecté sur cet appareil/i),
     ).toBeInTheDocument();
@@ -32,6 +32,6 @@ describe("accessibilité du formulaire de connexion", () => {
   it("marque les champs obligatoires pour les technologies d'assistance", () => {
     render(<FormulaireConnexion />);
     expect(screen.getByLabelText(/nom d’utilisateur/i)).toBeRequired();
-    expect(screen.getByLabelText(/mot de passe/i)).toBeRequired();
+    expect(screen.getByLabelText("Mot de passe")).toBeRequired();
   });
 });

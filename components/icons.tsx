@@ -3,6 +3,8 @@ import {
   Bell,
   Check,
   ClipboardList,
+  Eye,
+  EyeOff,
   Pencil,
   LayoutDashboard,
   Lock,
@@ -53,6 +55,8 @@ export const IconFermer = (p: LucideProps) => <X {...reglages} {...p} />;
 export const IconAlerte = (p: LucideProps) => <TriangleAlert {...reglages} {...p} />;
 export const IconInventaire = (p: LucideProps) => <ClipboardList {...reglages} {...p} />;
 export const IconCrayon = (p: LucideProps) => <Pencil {...reglages} {...p} />;
+export const IconOeil = (p: LucideProps) => <Eye {...reglages} {...p} />;
+export const IconOeilBarre = (p: LucideProps) => <EyeOff {...reglages} {...p} />;
 export const IconCheck = (p: LucideProps) => <Check {...reglages} {...p} />;
 export const IconParametres = (p: LucideProps) => <Settings {...reglages} {...p} />;
 export const IconDeconnexion = (p: LucideProps) => <LogOut {...reglages} {...p} />;

@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { IconCadenas, IconFleche, IconUtilisateur } from "@/components/icons";
+import {
+  IconCadenas,
+  IconFleche,
+  IconOeil,
+  IconOeilBarre,
+  IconUtilisateur,
+} from "@/components/icons";
 import { messageErreur } from "@/lib/api";
 import { seConnecter } from "@/lib/auth";
 import { notifier } from "@/lib/notifier";
@@ -26,6 +32,8 @@ export function FormulaireConnexion() {
   const router = useRouter();
   const [identifiant, setIdentifiant] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
+  // Masqué au départ : le poste du comptoir est à la vue des clients.
+  const [motDePasseVisible, setMotDePasseVisible] = useState(false);
   // Décoché par défaut, et c'est un choix de sécurité, pas une préférence :
   // le poste du comptoir est partagé entre le gérant et les vendeurs. Coché,
   // le jeton part dans localStorage et survit à la fermeture du navigateur
@@ -98,13 +106,34 @@ export function FormulaireConnexion() {
           <input
             id="motdepasse"
             name="motdepasse"
-            type="password"
+            type={motDePasseVisible ? "text" : "password"}
             autoComplete="current-password"
             required
             value={motDePasse}
             onChange={(e) => setMotDePasse(e.target.value)}
-            className="w-full bg-transparent px-3 text-sm text-white focus:outline-none"
+            // `min-w-0 flex-1` et non `w-full` : le bouton voisin serait
+            // sinon poussé hors du champ, qui masque ce qui déborde.
+            className="min-w-0 flex-1 bg-transparent px-3 text-sm text-white focus:outline-none"
           />
+          {/* `type="button"` : sans lui, un clic soumettrait le formulaire.
+              Le libellé accessible énonce l'action à venir et change avec
+              l'état, ce qui dit aussi où l'on en est. */}
+          <button
+            type="button"
+            onClick={() => setMotDePasseVisible((visible) => !visible)}
+            aria-label={
+              motDePasseVisible
+                ? "Masquer le mot de passe"
+                : "Afficher le mot de passe"
+            }
+            className="flex w-12 shrink-0 cursor-pointer items-center justify-center text-white/60 transition-colors duration-200 hover:text-white focus-visible:text-white"
+          >
+            {motDePasseVisible ? (
+              <IconOeilBarre className="h-[18px] w-[18px]" />
+            ) : (
+              <IconOeil className="h-[18px] w-[18px]" />
+            )}
+          </button>
         </div>
       </div>
 
