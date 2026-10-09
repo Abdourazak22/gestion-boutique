@@ -30,7 +30,16 @@ export function Sidebar() {
   const { deconnecter, deconnexionEnCours } = useSession();
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col bg-shell text-white lg:flex">
+    // `self-start` est indispensable et non décoratif : enfant d'un conteneur
+    // flex, l'aside s'étirerait par défaut à la hauteur de toute la page, et un
+    // élément collant aussi haut que son conteneur ne colle jamais. Associé à
+    // `h-screen`, il tient la hauteur de la fenêtre et reste en place pendant
+    // que le contenu défile.
+    //
+    // `overflow-y-auto` est une précaution : le menu tient aujourd'hui dans
+    // n'importe quel écran, mais s'il s'allongeait, ses derniers liens
+    // deviendraient inatteignables.
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col self-start overflow-y-auto bg-shell text-white lg:flex">
       <div className="flex items-center gap-2.5 px-5 py-6">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500">
           <IconBoutique className="h-4.5 w-4.5" />
