@@ -53,7 +53,15 @@ export function Topbar() {
   }
 
   return (
-    <header className="flex items-center gap-4 border-b border-line bg-surface px-4 py-3 sm:px-6">
+    // Collante comme la barre latérale, mais sans le `self-start` qu'elle exige :
+    // le parent est ici un flex en colonne, où l'étirement joue sur la largeur
+    // et laisse l'en-tête à sa hauteur naturelle.
+    //
+    // `z-10` la place au-dessus du contenu qui défile dessous, et `bg-surface`
+    // la rend opaque : sans fond, le texte de la page transparaîtrait au
+    // travers. La barre d'onglets mobile est en `z-20` mais vit en bas de
+    // l'écran, les deux ne se recouvrent jamais.
+    <header className="sticky top-0 z-10 flex items-center gap-4 border-b border-line bg-surface px-4 py-3 sm:px-6">
       <form onSubmit={rechercher} className="relative max-w-md flex-1" role="search">
         <label htmlFor="recherche-globale" className="sr-only">
           Rechercher un produit par son nom
