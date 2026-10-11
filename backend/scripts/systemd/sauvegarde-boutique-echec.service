@@ -1,0 +1,14 @@
+# Déclenchée par OnFailure= quand la sauvegarde échoue.
+#
+# Une sauvegarde qui cesse silencieusement de fonctionner est pire qu'une
+# absence de sauvegarde : elle donne une fausse assurance. D'où l'alerte
+# visible, à l'écran, et non une ligne de journal que personne ne lit.
+
+[Unit]
+Description=Alerte : la sauvegarde de la boutique a échoué
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/notify-send --urgency=critical \
+    "Sauvegarde de la boutique en échec" \
+    "Vérifier : journalctl --user -u sauvegarde-boutique -n 50"

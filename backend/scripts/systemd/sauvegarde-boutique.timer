@@ -1,0 +1,21 @@
+# Minuterie de la sauvegarde quotidienne.
+
+[Unit]
+Description=Sauvegarde quotidienne de la base de la boutique
+
+[Timer]
+# 20h00 : après la fermeture, les ventes du jour sont saisies.
+OnCalendar=*-*-* 20:00:00
+
+# Essentiel ici : si le poste était éteint ou la session fermée à 20h00, la
+# sauvegarde est rattrapée au prochain démarrage de la session au lieu d'être
+# purement perdue.
+Persistent=true
+
+# Évite de lancer pg_dump à la seconde pile où tout le reste démarre.
+RandomizedDelaySec=5min
+
+Unit=sauvegarde-boutique.service
+
+[Install]
+WantedBy=timers.target
