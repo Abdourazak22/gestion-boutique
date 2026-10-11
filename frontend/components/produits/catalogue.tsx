@@ -1,0 +1,342 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Erreur, PageHorsLimites, Squelette, Vide } from "@/components/ui/etats";
+import {
+  IconAlerte,
+  IconCheck,
+  IconCrayon,
+  IconInventaire,
+  IconRecherche,
+} from "@/components/icons";
+import { FormulaireProduit } from "@/components/produits/formulaire-produit";
+import { Inventaire } from "@/components/produits/inventaire";
+import { listerProduits } from "@/lib/produits";
+import { useRequete } from "@/lib/requete";
+import { libelleUnite, marge, type Produit } from "@/lib/types";
+import { fcfa, nombre, pourcent } from "@/lib/format";
+
+const PAR_PAGE = 12;
+
+/**
+ * Catalogue branché sur `GET /api/produits`.
+ *
+ * La recherche par nom est déléguée au serveur : c'est lui qui détient le
+ * catalogue entier ; filtrer la page courante côté navigateur ne trouverait
+ * que les produits déjà chargés.
+ */
+export function Catalogue({
+  version = 0,
+  rechercheInitiale = "",
+  estGerant = false,
+}: {
+  version?: number;
+  /** Terme venu de l'URL (recherche lancée depuis la barre du haut). */
+  rechercheInitiale?: string;
+  /**
+   * Ouvre l'inventaire sur chaque produit. Faux par défaut : le rôle est lu
+   * par l'écran parent, qui dispose de la session, pour que ce composant
+   * reste montable sans elle.
+   */
+  estGerant?: boolean;
+}) {
+  const [saisie, setSaisie] = useState(rechercheInitiale);
+  // Produit en cours de comptage, nul quand la boîte est fermée.
+  const [inventorie, setInventorie] = useState<Produit | null>(null);
+  // Produit en cours de modification, nul quand la boîte est fermée.
+  const [modifie, setModifie] = useState<Produit | null>(null);
+  const [recherche, setRecherche] = useState(rechercheInitiale);
+  const [page, setPage] = useState(0);
+
+  // Laisser retomber la frappe avant d'interroger l'API : une requête par
+  // caractère saturerait le serveur pour un résultat qu'on jette aussitôt.
+  //
+  // La garde n'est pas une optimisation. Sans elle, l'effet s'armait aussi au
+  // montage et remettait la page à zéro 300 ms plus tard : un clic sur
+  // « Suivant » dans cet intervalle était annulé, et l'utilisateur revenait
+  // page 1 sans comprendre pourquoi. Remettre la pagination à zéro n'a de sens
+  // que lorsque le terme recherché change vraiment.
+  useEffect(() => {
+    if (saisie === recherche) return;
+
+    const minuteur = setTimeout(() => {
+      setRecherche(saisie);
+      setPage(0);
+    }, 300);
+    return () => clearTimeout(minuteur);
+  }, [saisie, recherche]);
+
+  const { donnees, chargement, erreur, recharger } = useRequete(
+    `produits?nom=${recherche}&page=${page}&v=${version}`,
+    (signal) => listerProduits({ nom: recherche, page, size: PAR_PAGE }, signal),
+  );
+
+  return (
+    <>
+      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-card border border-line bg-surface p-4">
+        <div className="relative w-full sm:max-w-sm">
+          <label htmlFor="recherche-produit" className="sr-only">
+            Rechercher un produit par son nom
+          </label>
+          <IconRecherche className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-3" />
+          <input
+            id="recherche-produit"
+            type="search"
+            value={saisie}
+            onChange={(e) => setSaisie(e.target.value)}
+            placeholder="Nom du produit…"
+            className="h-10 w-full rounded-lg border border-line bg-plane pr-3 pl-9 text-sm text-ink placeholder:text-ink-3 focus:border-brand-400 focus:bg-surface"
+          />
+        </div>
+
+        {donnees ? (
+          <p aria-live="polite" className="text-xs text-ink-2 sm:ml-auto">
+            {nombre(donnees.page.totalElements)} référence
+            {donnees.page.totalElements > 1 ? "s" : ""}
+            {recherche ? ` pour « ${recherche} »` : ""}
+          </p>
+        ) : null}
+      </div>
+
+      {erreur ? (
+        <Erreur message={erreur} onReessayer={recharger} />
+      ) : chargement ? (
+        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }, (_, i) => (
+            <li key={i}>
+              <Squelette className="h-52" />
+            </li>
+          ))}
+        </ul>
+      ) : donnees && donnees.content.length === 0 ? (
+        donnees.page.totalElements > 0 ? (
+          <PageHorsLimites onRetour={() => setPage(0)} />
+        ) : (
+          <Vide
+            titre="Aucun produit trouvé"
+            indice={
+              recherche
+                ? "Vérifiez l’orthographe ou effacez la recherche."
+                : "Le catalogue est vide : ajoutez un premier produit."
+            }
+          />
+        )
+      ) : (
+        <>
+          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {donnees?.content.map((p) => (
+              <li key={p.id}>
+                <CarteProduit
+                  produit={p}
+                  onModifier={estGerant ? () => setModifie(p) : undefined}
+                  onInventaire={estGerant ? () => setInventorie(p) : undefined}
+                />
+              </li>
+            ))}
+          </ul>
+
+          {donnees && donnees.page.totalPages > 1 ? (
+            <Pagination
+              page={donnees.page.number}
+              total={donnees.page.totalPages}
+              onChanger={setPage}
+            />
+          ) : null}
+
+          {/* Montée à l'ouverture et démontée à la fermeture : le journal
+              qu'elle affiche est rechargé à chaque comptage, et les champs
+              repartent vierges. `recharger` remet le catalogue à jour, le
+              stock affiché venant de changer. */}
+          {inventorie ? (
+            <Inventaire
+              produit={inventorie}
+              onFermer={() => setInventorie(null)}
+              onAjuste={recharger}
+            />
+          ) : null}
+
+          {/* Clé sur l'identifiant : les champs du formulaire ne sont pas
+              contrôlés, c'est le remontage qui garantit qu'ouvrir un autre
+              produit affiche bien ses valeurs et non celles du précédent. */}
+          {modifie ? (
+            <FormulaireProduit
+              key={modifie.id}
+              produit={modifie}
+              onFermer={() => setModifie(null)}
+              onEnregistre={recharger}
+            />
+          ) : null}
+        </>
+      )}
+    </>
+  );
+}
+
+function CarteProduit({
+  produit: p,
+  onModifier,
+  onInventaire,
+}: {
+  produit: Produit;
+  /** Absents pour un vendeur : ces deux écritures lui sont refusées en 403. */
+  onModifier?: () => void;
+  onInventaire?: () => void;
+}) {
+  // Le remplissage se lit par rapport à trois fois le seuil : au-delà, le
+  // stock est confortable et la nuance n'apporte plus rien.
+  const reference = Math.max(p.seuilAlerte * 3, 1);
+  const remplissage = Math.min((p.quantiteStock / reference) * 100, 100);
+
+  return (
+    <article className="h-full rounded-card border border-line bg-surface p-5 transition-colors duration-200 hover:border-brand-300">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-[15px] leading-snug font-semibold text-ink">
+            {p.nom}
+          </h2>
+          {p.description ? (
+            <p className="mt-0.5 line-clamp-2 text-xs text-ink-2">
+              {p.description}
+            </p>
+          ) : null}
+        </div>
+        {p.enAlerteStock ? (
+          <Badge ton="critical" icone={<IconAlerte className="h-3.5 w-3.5" />}>
+            Stock bas
+          </Badge>
+        ) : (
+          <Badge ton="good" icone={<IconCheck className="h-3.5 w-3.5" />}>
+            En stock
+          </Badge>
+        )}
+      </div>
+
+      <dl className="tnum mt-4 grid grid-cols-3 gap-3">
+        <div>
+          <dt className="text-[11px] text-ink-2">Achat</dt>
+          <dd className="mt-0.5 text-[13px] font-medium text-ink">
+            {fcfa(p.prixAchat)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[11px] text-ink-2">Vente</dt>
+          <dd className="mt-0.5 text-[13px] font-semibold text-ink">
+            {fcfa(p.prixVente)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[11px] text-ink-2">Marge</dt>
+          <dd className="mt-0.5 text-[13px] font-medium text-brand-600">
+            {pourcent(marge(p))}
+          </dd>
+        </div>
+      </dl>
+
+      <div className="mt-4">
+        <div className="flex items-baseline justify-between text-[11px]">
+          <span className="text-ink-2">Stock · seuil {p.seuilAlerte}</span>
+          <span className="tnum font-semibold text-ink">
+            {nombre(p.quantiteStock)} {libelleUnite[p.unite]}
+          </span>
+        </div>
+        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-plane">
+          <div
+            className={`h-full rounded-full ${p.enAlerteStock ? "bg-critical" : "bg-brand-500"}`}
+            style={{ width: `${Math.max(remplissage, 4)}%` }}
+          />
+        </div>
+      </div>
+
+      {onModifier || onInventaire ? (
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          {/* Nom accessible porté par aria-label et non par un span
+              complémentaire : le calcul du nom concatène les noeuds sans
+              séparateur, ce qui annonçait « Inventairede Riz parfumé ». Le
+              libellé visible reste contenu dans le nom accessible. */}
+          {onModifier ? (
+            <ActionCarte
+              onClick={onModifier}
+              nomAccessible={`Modifier ${p.nom}`}
+              icone={<IconCrayon className="h-4 w-4" />}
+              libelle="Modifier"
+            />
+          ) : null}
+          {onInventaire ? (
+            <ActionCarte
+              onClick={onInventaire}
+              nomAccessible={`Inventaire de ${p.nom}`}
+              icone={<IconInventaire className="h-4 w-4" />}
+              libelle="Inventaire"
+            />
+          ) : null}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+/**
+ * Action en pied de carte. Hauteur minimale de 44 px : la cible doit rester
+ * atteignable au doigt sur le téléphone du comptoir.
+ */
+function ActionCarte({
+  onClick,
+  nomAccessible,
+  icone,
+  libelle,
+}: {
+  onClick: () => void;
+  nomAccessible: string;
+  icone: React.ReactNode;
+  libelle: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={nomAccessible}
+      className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-line px-3 text-[13px] font-medium text-ink transition-colors duration-200 hover:border-brand-300 hover:text-brand-600"
+    >
+      {icone}
+      {libelle}
+    </button>
+  );
+}
+
+export function Pagination({
+  page,
+  total,
+  onChanger,
+}: {
+  page: number;
+  total: number;
+  onChanger: (page: number) => void;
+}) {
+  return (
+    <nav
+      aria-label="Pagination"
+      className="mt-4 flex items-center justify-center gap-2"
+    >
+      <button
+        type="button"
+        onClick={() => onChanger(page - 1)}
+        disabled={page === 0}
+        className="min-h-11 cursor-pointer rounded-lg border border-line bg-surface px-4 text-sm font-medium text-ink transition-colors duration-200 hover:bg-plane disabled:cursor-not-allowed disabled:text-ink-3"
+      >
+        Précédent
+      </button>
+      <span aria-current="page" className="tnum px-2 text-sm text-ink-2">
+        Page {page + 1} sur {total}
+      </span>
+      <button
+        type="button"
+        onClick={() => onChanger(page + 1)}
+        disabled={page >= total - 1}
+        className="min-h-11 cursor-pointer rounded-lg border border-line bg-surface px-4 text-sm font-medium text-ink transition-colors duration-200 hover:bg-plane disabled:cursor-not-allowed disabled:text-ink-3"
+      >
+        Suivant
+      </button>
+    </nav>
+  );
+}

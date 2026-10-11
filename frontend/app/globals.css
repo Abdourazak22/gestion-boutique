@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme {
+  /* --- Marque : vert boutique (rampe ordinale validée sur fond blanc) --- */
+  --color-brand-50: #eefaf2;
+  --color-brand-100: #d7f2e2;
+  --color-brand-200: #a9e0c2;
+  --color-brand-300: #6ec194;
+  --color-brand-400: #3fa96a;
+  --color-brand-500: #15803d;
+  --color-brand-600: #126a33;
+  --color-brand-700: #0f5a2b;
+  --color-brand-900: #14532d;
+
+  /* --- Surfaces --- */
+  --color-plane: #f4f4f1;
+  --color-surface: #ffffff;
+  --color-shell: #141615;
+  --color-shell-soft: #1e211f;
+
+  /* --- Encres --- */
+  --color-ink: #0b0b0b;
+  --color-ink-2: #52514e;
+  /* Assombri pour atteindre le contraste AA (4,5:1) : la valeur precedente,
+     #898781, plafonnait a 3,59 sur blanc et 3,26 sur --color-plane, alors
+     qu'elle porte du texte informatif (placeholders, libelles d'axe, seuils). */
+  --color-ink-3: #706f6a;
+  --color-line: #e5e5e0;
+
+  /* --- Statuts (palette réservée, jamais utilisée comme couleur de série) --- */
+  --color-good: #0ca30c;
+  --color-warning: #fab219;
+  --color-serious: #ec835a;
+  --color-critical: #d03b3b;
+
+  --radius-card: 1rem;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--color-plane);
+  color: var(--color-ink);
+}
+
+/* Chiffres alignés dans les colonnes de tableaux et les axes */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
