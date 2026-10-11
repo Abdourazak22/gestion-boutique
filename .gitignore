@@ -1,0 +1,4 @@
+# Les sous-projets ont leurs propres règles ; ici, seulement le bruit du système.
+.DS_Store
+Thumbs.db
+*.swp
