@@ -26,13 +26,20 @@ classe et modèle conceptuel des données.
 
 Il faut Java 17 ou plus récent, Node 22 et PostgreSQL.
 
+Ces instructions ont été vérifiées sur une base vierge : création du compte
+et de la base, migrations appliquées, puis les deux serveurs interrogés.
+
 
 ### 1. La base
 
 ```sh
-createdb boutique
-psql -c "CREATE USER boutique WITH PASSWORD 'boutique'; GRANT ALL ON DATABASE boutique TO boutique;"
+sudo -u postgres psql -c "CREATE USER boutique WITH PASSWORD 'boutique';"
+sudo -u postgres createdb -O boutique boutique
 ```
+
+Le `-O boutique` n'est pas facultatif : depuis PostgreSQL 15, un simple
+`GRANT ALL ON DATABASE` ne suffit plus à écrire dans le schéma `public`. Sans
+lui, l'application démarre puis échoue sur un refus de permission.
 
 Le schéma se crée tout seul au premier démarrage : les migrations sont
 embarquées dans l'application.
@@ -56,10 +63,20 @@ Un compte gérant est créé au premier lancement : `gerant` / `gerant123`.
 
 ```sh
 cd frontend
-cp .env.example .env     # puis renseigner NEXT_PUBLIC_API_URL=http://localhost:8080/api
+
+cat > .env <<'EOF'
+NEXT_PUBLIC_API_URL=http://localhost:8080/api
+NEXT_PUBLIC_API_TIMEOUT=10000
+API_URL=http://localhost:8080/api
+EOF
+
 npm ci
 npm run build && npm run start
 ```
+
+Le fichier `.env.example` liste les variables sans leurs valeurs : le copier
+tel quel fait échouer la construction, l'application refusant de démarrer sans
+adresse d'API plutôt que d'émettre des requêtes vers nulle part.
 
 Elle écoute sur **3000**. Ouvrir <http://localhost:3000>.
 
