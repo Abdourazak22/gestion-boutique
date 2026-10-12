@@ -6,7 +6,8 @@ Logiciel de gestion d'une boutique de produits alimentaires : ventes,
 livraisons, stock, personnel et tableau de bord.
 
 Réalisé d'après le cahier des charges `backend/sujet_gestion_boutique.pdf`.
-Le rapport demandé se trouve dans **[RAPPORT.md](RAPPORT.md)**.
+Le rapport demandé se trouve dans **[RAPPORT.pdf](RAPPORT.pdf)**,
+dont la source est [RAPPORT.md](RAPPORT.md).
 
 
 ## Ce qu'il contient
