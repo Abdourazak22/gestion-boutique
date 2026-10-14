@@ -56,7 +56,6 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 Elle écoute sur **8080**. La documentation interactive est servie sur
 <http://localhost:8080/swagger-ui.html>.
 
-Un compte gérant est créé au premier lancement : `gerant` / `gerant123`.
 
 
 ### 3. L'interface
@@ -82,6 +81,19 @@ Elle écoute sur **3000**. Ouvrir <http://localhost:3000>.
 
 L'adresse de l'API est inscrite dans le bundle à la construction : la changer
 impose de reconstruire, pas seulement de relancer.
+
+
+## Se connecter
+
+L'application crée un compte gérant à son premier démarrage.
+
+    identifiant     gerant
+    mot de passe    gerant123
+
+Pour voir la séparation des rôles, créer un vendeur depuis l'écran
+**Utilisateurs**, puis se connecter avec lui : le tableau de bord, l'inventaire,
+l'annulation d'une vente et l'export comptable lui sont refusés, et pas
+seulement masqués. Le serveur répond 403 même si la route est forcée.
 
 
 ## Ce que le projet démontre
